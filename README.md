@@ -1,6 +1,11 @@
 ## Photoluminescence Scanner
 
-Thesis Project `Development of a diagnostic imaging system for field inspection solar photovoltaic PV plants` in collaboration with DTU Electro.
+Fork of: https://github.com/caee/Photoluminescence-scanner/
+For more information about the project please visit the original repository.
+Jeppe Elias Ekberg Jensen, 2025
+
+
+<!--Thesis Project `Development of a diagnostic imaging system for field inspection solar photovoltaic PV plants` in collaboration with DTU Electro.
 
 Carl Emil Elling, 2025
 
@@ -8,7 +13,7 @@ System functionality is demonstrated in this video: https://youtu.be/fIywvakTZRA
 
 Example results found in the `Example Scans - Videos and images` folder
 
-For access to thesis, find on DTU internal document query FindIT or contact directly at carlemilelling@hotmail.com
+For access to thesis, find on DTU internal document query FindIT or contact directly at carlemilelling@hotmail.com -->
 
 ### Project Structure
 
