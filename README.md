@@ -2,7 +2,7 @@
 
 Fork of: https://github.com/caee/Photoluminescence-scanner/
 For more information about the project please visit the original repository.
-Jeppe Elias Ekberg Jensen, 2025
+Carl Emil Elling & Jeppe Elias Ekberg Jensen, 2025
 
 
 <!--Thesis Project `Development of a diagnostic imaging system for field inspection solar photovoltaic PV plants` in collaboration with DTU Electro.
