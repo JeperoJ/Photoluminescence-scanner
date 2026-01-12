@@ -84,7 +84,7 @@ def connect_gantry():
     global gantry_state
     global gantry_handler
     print(gantry_dropdown.get())
-    gantry_handler = gantry_utils.connect(gantry_dropdown.get())
+    gantry_handler = gantry_utils.connect(com_ports[[str(port) for port in com_ports].index(gantry_dropdown.get())].device)
     gantry_button.config(text="Calibrate Gantry", command=calibrate_gantry)
     gantry_state = "Connected"
     update()
@@ -97,8 +97,8 @@ def calibrate_gantry():
     update()
 
 com_ports = gantry_utils.get_ports()
-gantry_dropdown = grid_make(ttk.Combobox(root, values=com_ports), 0, 0)
-gantry_button = grid_make(ttk.Button(root, text="Connect Gantry", command=connect_gantry), 0, 1)
+gantry_dropdown = grid_make(ttk.Combobox(root, values=com_ports, state="readonly"), 0, 0)
+gantry_button = grid_make(ttk.Button(root, text="Connect Gantry", command=test), 0, 1)
 
 #Camera
 def init_camera():
@@ -114,7 +114,7 @@ def calibrate_camera(): #TODO: Figure out import from Submodule, or write simple
     update()
 
 camera_list = camera_utils.list(camera_context)
-camera_dropdown = grid_make(ttk.Combobox(root, values=camera_list), 1, 0)
+camera_dropdown = grid_make(ttk.Combobox(root, values=camera_list, state="readonly"), 1, 0)
 camera_button = grid_make(ttk.Button(root, text="Calibrate Camera", command=init_camera), 1, 1)
 
 #Directory

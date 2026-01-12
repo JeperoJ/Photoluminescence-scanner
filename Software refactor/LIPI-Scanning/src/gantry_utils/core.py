@@ -20,13 +20,8 @@ def get_ports():
 
 def connect(device):
     port = device.device
-    try:
-        gcode_handler = gCodeHandler.GCodeHandler(device)
-        gcode_handler.connect()
-    
-    except:
-        print("Error connecting to gantry")
-        sys.exit()
+    gcode_handler = gCodeHandler.GCodeHandler(port)
+    gcode_handler.connect()
     return gcode_handler
 
 def calibrate(gcode_handler):

@@ -107,13 +107,8 @@ def connectGantry():
     t=input("choose port: (typically shows board as USB serial device)")
     port=available_ports[int(t)].device
     print(port)
-    try:
-        gcode_handler = gCodeHandler.GCodeHandler(port)
-        gcode_handler.connect()
-    
-    except:
-        print("Error connecting to gantry")
-        sys.exit()
+    gcode_handler = gCodeHandler.GCodeHandler(port)
+    gcode_handler.connect()
     return gcode_handler
 
 def scanContinuous(gcode_handler,context,savePath,frameRate,speed=5000):
