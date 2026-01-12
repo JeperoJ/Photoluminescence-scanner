@@ -84,7 +84,7 @@ def connect_gantry():
     global gantry_state
     global gantry_handler
     print(gantry_dropdown.get())
-    gantry_handler = gantry_utils.connect(com_ports[[str(port) for port in com_ports].index(gantry_dropdown.get())].device)
+    gantry_handler = gantry_utils.connect(com_ports[[str(port) for port in com_ports].index(gantry_dropdown.get())])
     gantry_button.config(text="Calibrate Gantry", command=calibrate_gantry)
     gantry_state = "Connected"
     update()
@@ -92,6 +92,7 @@ def connect_gantry():
 def calibrate_gantry():
     interrupt_popup("Gantry Calibration", "Please make sure the gantry area is clear and press OK to continue.")
     gantry_utils.calibrate(gantry_handler)
+    gantry_button.config(text="Gantry Calibrated", state="disabled")
     global gantry_state
     gantry_state = "Calibrated"
     update()
