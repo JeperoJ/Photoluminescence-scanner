@@ -18,9 +18,10 @@ def get_ports():
         # return [port.device for port in ports]
         return ports
 
-def connect(port):
+def connect(device):
+    port = device.device
     try:
-        gcode_handler = gCodeHandler.GCodeHandler(port)
+        gcode_handler = gCodeHandler.GCodeHandler(device)
         gcode_handler.connect()
     
     except:

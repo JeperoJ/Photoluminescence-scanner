@@ -38,14 +38,14 @@ my_font = font.Font(family='Helvetica', size=32)
 root.option_add("*Font", my_font)
 global camera_context
 global gantry_handler
-global gantry_calibrated
-global camera_calibrated
+global gantry_state
+global camera_state
 global fps
 global gain
 global tint
 
-gantry_calibrated = False
-camera_calibrated = False
+gantry_state = None
+camera_state = None
 camera_context = camera_utils.start_context()
 fps = 50
 gain = "Medium"
@@ -54,15 +54,15 @@ speed = 5000
 
 def update():
     print("UPDATING")
-    if gantry_calibrated and camera_calibrated and save_dir_text.get() != "":
+    if gantry_state == "Calibrated" and camera_state == "Calibrated" and save_dir_text.get() != "":
         scan_module_button.config(state="enabled")
 
 def quit():
     root.destroy()
     sys.exit()
-    if camera_calibrated:
+    if camera_state is not None:
         camera_utils.disconnect(camera_context)
-    if gantry_calibrated:
+    if gantry_state is not None:
         gantry_handler.disconnect()
 
 def grid_make(widget, row, column, padding=5):
@@ -80,17 +80,20 @@ def interrupt_popup(title,text):
     root.wait_window(popup)  # Wait for popup to close
 
 #Gantry
-def connect_gantry(): #TODO: Figure out import from PLRobot / Submodule, or write simple function / wrapper
+def connect_gantry():
+    global gantry_state
     global gantry_handler
+    print(gantry_dropdown.get())
     gantry_handler = gantry_utils.connect(gantry_dropdown.get())
     gantry_button.config(text="Calibrate Gantry", command=calibrate_gantry)
+    gantry_state = "Connected"
     update()
 
-def calibrate_gantry(): #TODO: Figure out import from PLRobot / Submodule, or write simple function / wrapper
+def calibrate_gantry():
     interrupt_popup("Gantry Calibration", "Please make sure the gantry area is clear and press OK to continue.")
     gantry_utils.calibrate(gantry_handler)
-    global gantry_calibrated
-    gantry_calibrated = True
+    global gantry_state
+    gantry_state = "Calibrated"
     update()
 
 com_ports = gantry_utils.get_ports()
