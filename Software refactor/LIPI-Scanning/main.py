@@ -98,7 +98,7 @@ def calibrate_gantry():
 
 com_ports = gantry_utils.get_ports()
 gantry_dropdown = grid_make(ttk.Combobox(root, values=com_ports, state="readonly"), 0, 0)
-gantry_button = grid_make(ttk.Button(root, text="Connect Gantry", command=test), 0, 1)
+gantry_button = grid_make(ttk.Button(root, text="Connect Gantry", command=connect_gantry), 0, 1)
 
 #Camera
 def init_camera():
