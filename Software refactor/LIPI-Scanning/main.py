@@ -18,15 +18,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import font
+import sys
+import os
 from src import gantry_utils
+from src import camera_utils
+
 root = tk.Tk()
-root.attributes('-fullscreen', True)
-#root.overrideredirect(True)
-#width = root.winfo_screenwidth()
-#height = root.winfo_screenheight()
-#frm = ttk.Frame(root)
-#frm.pack(fill=tk.BOTH, expand=True)
-#frm.grid()
+#root.attributes('-fullscreen', True)
 tk.Grid.rowconfigure(root, 0, weight=1)
 tk.Grid.rowconfigure(root, 1, weight=1)
 tk.Grid.rowconfigure(root, 2, weight=1)
@@ -38,41 +36,91 @@ s.configure('.', font=('Helvetica', 60))
 
 my_font = font.Font(family='Helvetica', size=32)
 root.option_add("*Font", my_font)
+global camera_context
+global gantry_handler
+global gantry_calibrated
+global camera_calibrated
+global fps
+global gain
+global tint
 
-def calibrate_gantry(): #TODO: Figure out import from PLRobot / Submodule, or write simple function / wrapper
-    print("Not done!")
-
-def calibrate_camera(): #TODO: Figure out import from Submodule, or write simple function / wrapper
-    print("Not done!")
-
-def scan_module(): #TODO: Implement this using the variables present in the UI
-    print("Not done!")
+gantry_calibrated = False
+camera_calibrated = False
+camera_context = camera_utils.start_context()
+fps = 50
+gain = "Medium"
+tint = 1 #Exposure time in ms
+speed = 5000
 
 def update():
     print("UPDATING")
+    if gantry_calibrated and camera_calibrated and save_dir_text.get() != "":
+        scan_module_button.config(state="enabled")
 
-def select_directory():
-    dir_path = filedialog.askdirectory()
-    print(f"Selected directory: {dir_path}")
-    save_dir_text.set(dir_path)
+def quit():
+    root.destroy()
+    sys.exit()
+    if camera_calibrated:
+        camera_utils.disconnect(camera_context)
+    if gantry_calibrated:
+        gantry_handler.disconnect()
 
 def grid_make(widget, row, column, padding=5):
     widget_return = widget
     widget_return.grid(row=row, column=column, sticky="nsew", padx=padding, pady=padding)
     return widget_return
 
-#my_font = font.Font(family='Helvetica', size=46)
+def interrupt_popup(title,text):
+    popup = tk.Toplevel(root)
+    popup.title(title)
+    #popup.geometry("600x200")
+    popup.grab_set()  # Make modal, locks root window
+    ttk.Label(popup, text=text).pack(pady=10)
+    ttk.Button(popup, text="OK", command=popup.destroy).pack()
+    root.wait_window(popup)  # Wait for popup to close
 
 #Gantry
-print(gantry_utils.get_ports())
-gantry_dropdown = grid_make(ttk.Combobox(root, values=gantry_utils.get_ports()), 0, 0)
-grid_make(ttk.Button(root, text="Calibrate Gantry", command=calibrate_gantry), 0, 1)
+def connect_gantry(): #TODO: Figure out import from PLRobot / Submodule, or write simple function / wrapper
+    global gantry_handler
+    gantry_handler = gantry_utils.connect(gantry_dropdown.get())
+    gantry_button.config(text="Calibrate Gantry", command=calibrate_gantry)
+    update()
+
+def calibrate_gantry(): #TODO: Figure out import from PLRobot / Submodule, or write simple function / wrapper
+    interrupt_popup("Gantry Calibration", "Please make sure the gantry area is clear and press OK to continue.")
+    gantry_utils.calibrate(gantry_handler)
+    global gantry_calibrated
+    gantry_calibrated = True
+    update()
+
+com_ports = gantry_utils.get_ports()
+gantry_dropdown = grid_make(ttk.Combobox(root, values=com_ports), 0, 0)
+gantry_button = grid_make(ttk.Button(root, text="Connect Gantry", command=connect_gantry), 0, 1)
 
 #Camera
-camera_dropdown = grid_make(ttk.Combobox(root, values=["Option 1", "Option 2"]), 1, 0)
-grid_make(ttk.Button(root, text="Calibrate Camera", command=calibrate_camera), 1, 1)
+def init_camera():
+    camera_utils.init_camera(camera_context, fps, tint, camera_dropdown.get(), gain=gain)
+    camera_button.config(text="Calibrate", command=calibrate_camera)
+    update()
+
+def calibrate_camera(): #TODO: Figure out import from Submodule, or write simple function / wrapper
+    global camera_calibrated
+    interrupt_popup("Camera Calibration", "Please place the camera lens cap and press OK to continue.")
+    camera_utils.calibrate_camera(camera_context, adaptiveBias=False)
+    camera_calibrated = True
+    update()
+
+camera_list = camera_utils.list(camera_context)
+camera_dropdown = grid_make(ttk.Combobox(root, values=camera_list), 1, 0)
+camera_button = grid_make(ttk.Button(root, text="Calibrate Camera", command=init_camera), 1, 1)
 
 #Directory
+def select_directory():
+    dir_path = filedialog.askdirectory()
+    print(f"Selected directory: {dir_path}")
+    save_dir_text.set(dir_path)
+    update()
+
 save_dir_frm = grid_make(ttk.Frame(root), 2, 0)
 tk.Grid.columnconfigure(save_dir_frm, 0, weight=1)
 tk.Grid.rowconfigure(save_dir_frm, 0, weight=2)
@@ -82,25 +130,13 @@ grid_make(ttk.Entry(save_dir_frm, textvariable=save_dir_text, font=("Helvetica",
 grid_make(ttk.Button(save_dir_frm, text="Select Directory", command=select_directory), 1, 0, padding=0)
 
 #Start Scan
-grid_make(ttk.Button(root, text="Start Scan", command=scan_module), 2, 1)
+def scan_module(): #TODO: Implement this using the variables present in the UI
+    scan_module_button.config(text="Interupt", command=quit)
+    gantry_utils.scan_continuous(gantry_handler,camera_context,save_dir_text.get(),fps,speed)
+    print("Not done!")
+
+scan_module_button = grid_make(ttk.Button(root, text="Start Scan", state="disabled", command=scan_module), 2, 1)
+
+root.protocol("WM_DELETE_WINDOW", quit)
 
 root.mainloop()
-
-
-"""
-UI Pseudo Structure
-Home screen:
-    Collumn
-        Row
-            Dropdown - COM Ports
-            Settings
-        Row
-            Dropdown - Camera Ports
-            Settings
-        Row
-            Text Box - Filename
-            Button - Choose Directory
-            Button - Start scan
-
-
-"""

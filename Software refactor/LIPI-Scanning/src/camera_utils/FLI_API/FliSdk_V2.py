@@ -1,16 +1,16 @@
-import LibLoader
-import ImageProcessing
-import FliCblueOne
-import FliCblueSfnc
-import FliCred
-import FliCredOne
-import FliCredTwo
-import FliCredTwoLite
-import FliCredThree
-import FliSerialCamera
-import FliGenicamCamera
-import FliOcam2K
-import FliOcam2S
+from . import LibLoader
+from . import ImageProcessing
+from . import FliCblueOne
+from . import FliCblueSfnc
+from . import FliCred
+from . import FliCredOne
+from . import FliCredTwo
+from . import FliCredTwoLite
+from . import FliCredThree
+from . import FliSerialCamera
+from . import FliGenicamCamera
+from . import FliOcam2K
+from . import FliOcam2S
 import ctypes
 import numpy as np
 

@@ -1,6 +1,5 @@
 import serial
 import time
-import serial.tools.list_ports
 import sys
 
 class GCodeHandler:

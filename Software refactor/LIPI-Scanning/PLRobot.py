@@ -23,7 +23,7 @@ def calibrateLoad(calpath):
     K,P,DIM=ProcessInGaAs.loadCal(calpath,width,height)
     return K,P,DIM
 
-def calibrateCamera(frameRate, tintVal, disp=False):
+def calibrateCamera(frameRate, tintVal, adaptiveBias=False):
     # Initialize camera
     context = FliSdk_V2.Init()
     imageAcquisition.initCamera(context, frameRate, tintVal)
@@ -32,16 +32,9 @@ def calibrateCamera(frameRate, tintVal, disp=False):
     imageAcquisition.PixelCorrect(context, True)
 
     # Buidling bias correction. Choose between NUC calibrated bias and FLI's adaptive bias (only C-RED3?)
-    val=input("Build standard bias [y/n]?")
-    if val=="y":
-        imageAcquisition.BuildNUCBias(context)
-        val=input("Also enable Adaptive Bias[y/n]?")
-        if val=="y":
-            imageAcquisition.EnableAdaptBias(context)
-    elif not val=="y":
-        val=input("Enable Adaptive bias instead [y/n]?")
-        if val=="y":
-            imageAcquisition.EnableAdaptBias(context)
+    imageAcquisition.BuildNUCBias(context)
+    if adaptiveBias == True:
+        imageAcquisition.EnableAdaptBias(context)
     #TODO: Flat correction. Fixing non-uniformity response of pixels [OPTIONAL]
     #https://andor.oxinst.com/learning/view/article/how-to-use-the-hdr-mode
     # val=input("Do flat correction?[y/n]")
@@ -54,8 +47,6 @@ def calibrateCamera(frameRate, tintVal, disp=False):
     FliSdk_V2.ImageProcessing.EnableAutoClip(context, -1, True)
     print("Auto clip enabled")
     # Debugging display
-    if disp:
-        imageAcquisition.justShowImage(context)
     return context
 def calibrateGantry(gcode_handler):
     """

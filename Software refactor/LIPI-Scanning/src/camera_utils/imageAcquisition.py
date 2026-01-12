@@ -1,8 +1,12 @@
-from FLI_API import FliSdk_V2
+import os
+from .FLI_API import FliSdk_V2
 import os
 import sys
 import cv2
 import time
+
+#sys.path.append(os.path.abspath("camera_utils/FLI_API"))
+
 #sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 def setFPS(context,val):
     try:

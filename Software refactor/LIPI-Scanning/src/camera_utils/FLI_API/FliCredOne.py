@@ -1,4 +1,4 @@
-import LibLoader
+from . import LibLoader
 import ctypes
 import numpy as np
 

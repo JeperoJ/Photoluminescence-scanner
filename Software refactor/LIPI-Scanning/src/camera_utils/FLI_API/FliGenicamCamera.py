@@ -1,4 +1,4 @@
-import LibLoader
+from . import LibLoader
 import ctypes
 
 bufferSize = ctypes.c_size_t(1000)
