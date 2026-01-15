@@ -11,7 +11,7 @@ from . import helpers
 __all__ = ['calibrate_camera', "init_camera", "start_context", "disconnect", "list"]
 
 def list(context):
-    FliSdk_V2.DetectCameras(context)
+    return FliSdk_V2.DetectCameras(context)
 
 def calibrate_camera(context, adaptiveBias=False):
     # Set bad pixel correction

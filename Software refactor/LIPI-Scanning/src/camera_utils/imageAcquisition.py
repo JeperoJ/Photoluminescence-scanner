@@ -283,7 +283,6 @@ def BuildNUCBias(context):
     print("[DEBUGGING] State before correction: (should be false)")
     print(state)
     
-    val = input("Cover lens and press any button...")
     print("Building bias")
     res = FliSdk_V2.FliCred.BuildBias(context)
     if not res:
@@ -296,7 +295,6 @@ def BuildNUCBias(context):
     res,state= FliSdk_V2.FliCred.GetBiasState(context)
     #print(res)
     print(state)
-    input("Bias correction applied. Press enter to continue...")
 # def buildOwnBiasNuc(context):
 #     #TODO:Own NUC Bias implementation??
 #     print("Bias correction for FLI C-RED 3 started.....") 
@@ -372,7 +370,6 @@ def PixelCorrect(context,state=True):
     Returns:
     None
     """
-    val = input("Bad pixel correction?[y/n]")
     res,state=FliSdk_V2.FliCredThree.GetBadPixelState(context)
     FliSdk_V2.FliCredThree.EnableBadPixel(context,False) #Set default value to false
     if state:

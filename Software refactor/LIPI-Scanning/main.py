@@ -22,6 +22,7 @@ import sys
 import os
 from src import gantry_utils
 from src import camera_utils
+from src.camera_utils.FLI_API import FliSdk_V2
 
 root = tk.Tk()
 #root.attributes('-fullscreen', True)
@@ -53,15 +54,14 @@ tint = 1 #Exposure time in ms
 speed = 5000
 
 def update():
-    print("UPDATING")
+    #print("UPDATING")
     if gantry_state == "Calibrated" and camera_state == "Calibrated" and save_dir_text.get() != "":
         scan_module_button.config(state="enabled")
 
 def quit():
     root.destroy()
     sys.exit()
-    if camera_state is not None:
-        camera_utils.disconnect(camera_context)
+    camera_utils.disconnect(camera_context)
     if gantry_state is not None:
         gantry_handler.disconnect()
 
@@ -70,31 +70,40 @@ def grid_make(widget, row, column, padding=5):
     widget_return.grid(row=row, column=column, sticky="nsew", padx=padding, pady=padding)
     return widget_return
 
-def interrupt_popup(title,text):
+def popup(title,text,dismiss=False):
     popup = tk.Toplevel(root)
     popup.title(title)
     #popup.geometry("600x200")
     popup.grab_set()  # Make modal, locks root window
     ttk.Label(popup, text=text).pack(pady=10)
-    ttk.Button(popup, text="OK", command=popup.destroy).pack()
-    root.wait_window(popup)  # Wait for popup to close
+    if dismiss:
+        ttk.Button(popup, text="OK", command=popup.destroy).pack()
+        root.wait_window(popup)  # Wait for popup to close
+    if not dismiss:
+        return popup
 
 #Gantry
 def connect_gantry():
     global gantry_state
     global gantry_handler
-    print(gantry_dropdown.get())
+    #print(gantry_dropdown.get())
+    _popup = popup("Gantry Connection", "Connecting to gantry. Please wait...")
+    _popup.update()
     gantry_handler = gantry_utils.connect(com_ports[[str(port) for port in com_ports].index(gantry_dropdown.get())])
     gantry_button.config(text="Calibrate Gantry", command=calibrate_gantry)
     gantry_state = "Connected"
+    _popup.destroy()
     update()
 
 def calibrate_gantry():
-    interrupt_popup("Gantry Calibration", "Please make sure the gantry area is clear and press OK to continue.")
-    gantry_utils.calibrate(gantry_handler)
-    gantry_button.config(text="Gantry Calibrated", state="disabled")
     global gantry_state
+    popup("Gantry Calibration", "Please make sure the gantry area is clear and press OK to continue.")
+    _popup = popup("Gantry Calibration", "Calibrating gantry. Please wait...")
+    _popup.update()
+    gantry_utils.calibrate(gantry_handler)
+    gantry_button.config(text="Gantry Ready", state="disabled")
     gantry_state = "Calibrated"
+    _popup.destroy()
     update()
 
 com_ports = gantry_utils.get_ports()
@@ -102,21 +111,32 @@ gantry_dropdown = grid_make(ttk.Combobox(root, values=com_ports, state="readonly
 gantry_button = grid_make(ttk.Button(root, text="Connect Gantry", command=connect_gantry), 0, 1)
 
 #Camera
-def init_camera():
+def connect_camera():
+    global camera_state
+    _popup = popup("Camera Initialization", "Connecting to camera. Please wait...")
+    _popup.update()
     camera_utils.init_camera(camera_context, fps, tint, camera_dropdown.get(), gain=gain)
     camera_button.config(text="Calibrate", command=calibrate_camera)
+    camera_state = "Connected"
+    _popup.destroy()
     update()
 
-def calibrate_camera(): #TODO: Figure out import from Submodule, or write simple function / wrapper
-    global camera_calibrated
-    interrupt_popup("Camera Calibration", "Please place the camera lens cap and press OK to continue.")
+def calibrate_camera():
+    global camera_state
+    popup("Camera Calibration", "Please put on the camera lens cap and press OK to continue.", dismiss=True)
+    _popup = popup("Camera Calibration", "Calibrating camera. Please wait...")
+    _popup.update()
     camera_utils.calibrate_camera(camera_context, adaptiveBias=False)
-    camera_calibrated = True
+    camera_state = "Calibrated"
+    camera_button.config(text="Camera Ready", state="disabled")
+    _popup.destroy()
     update()
 
+print(FliSdk_V2.DetectGrabbers(camera_context))
+print(FliSdk_V2.DetectCameras(camera_context))
 camera_list = camera_utils.list(camera_context)
 camera_dropdown = grid_make(ttk.Combobox(root, values=camera_list, state="readonly"), 1, 0)
-camera_button = grid_make(ttk.Button(root, text="Calibrate Camera", command=init_camera), 1, 1)
+camera_button = grid_make(ttk.Button(root, text="Connect Camera", command=connect_camera), 1, 1)
 
 #Directory
 def select_directory():
