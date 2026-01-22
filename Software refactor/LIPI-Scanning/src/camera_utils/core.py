@@ -3,22 +3,28 @@ import os
 import sys
 import cv2
 import time
+import logging
 from . import imageAcquisition
 from . import helpers
 
+#logger = logging.getLogger(__name__)
+
 #TODO: Potentially clean things up by making a Camera class, with an interally handled context
 
-__all__ = ['calibrate_camera', "init_camera", "start_context", "disconnect", "list"]
+__all__ = ['calibrate_camera', "init_camera", "disconnect", "list"]
 
 def list(context):
+    grabbers = FliSdk_V2.DetectGrabbers(context)
+    for s in grabbers:
+        print(f"- {s}")
     return FliSdk_V2.DetectCameras(context)
 
 def calibrate_camera(context, adaptiveBias=False):
     # Set bad pixel correction
-    imageAcquisition.PixelCorrect(context, True)
+    helpers.PixelCorrect(context, True)
 
     # Buidling bias correction. Choose between NUC calibrated bias and FLI's adaptive bias (only C-RED3?)
-    imageAcquisition.BuildNUCBias(context)
+    helpers.BuildNUCBias(context)
     if adaptiveBias:
         imageAcquisition.EnableAdaptBias(context)
         
@@ -57,7 +63,6 @@ def init_camera(context, frameRate, tintVal,camera, gain="Medium"):
 
     print("Setting mode full.")
     FliSdk_V2.SetMode(context, FliSdk_V2.Mode.Full)
-
     print("Updating...")
     ok = FliSdk_V2.Update(context)
 
@@ -65,7 +70,7 @@ def init_camera(context, frameRate, tintVal,camera, gain="Medium"):
         print("Error while updating SDK.")
         exit()
 
-    print("Done.")
+    print("Mode set to full.")
 
     fps = 0
 
@@ -75,9 +80,8 @@ def init_camera(context, frameRate, tintVal,camera, gain="Medium"):
         res, fps = FliSdk_V2.FliCblueSfnc.GetAcquisitionFrameRate(context)
     print("Previous camera FPS: " + str(fps))
 
-    # val = input("FPS to set? ")
     val = frameRate
-    helpers.setFPS(context,val)
+    helpers.set_fps(context,val)
 
     if FliSdk_V2.IsSerialCamera(context):
         res, fps = FliSdk_V2.FliSerialCamera.GetFps(context)
@@ -127,5 +131,5 @@ def disconnect(context):
     FliSdk_V2.Exit(context)
     print("Camera disconnected")
 
-def start_context():
-    return FliSdk_V2.Init()
+# def start_context():
+#     return FliSdk_V2.Init()

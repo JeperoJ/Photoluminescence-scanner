@@ -1,6 +1,9 @@
+title = "Default Config"
+
 [gantry]
 speed = 5000
 
 [camera]
 fps = 50
 tint = 2
+gain = "medium"
