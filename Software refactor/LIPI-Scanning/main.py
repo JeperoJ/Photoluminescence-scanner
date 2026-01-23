@@ -33,20 +33,21 @@ class LIPI_Scanner_App(ttk.Frame):
             #Initializing Application Variables
             ttk.Frame.__init__(self, parent)
             self = self
-            with open("LIPI-Scanning/data/config/default.toml", "r") as f:
-                self.config = tomlkit.load(f)
-            self.fps = self.config["camera"]["fps"]
-            self.tint = self.config["camera"]["tint"]
-            self.gain = self.config["camera"]["gain"]
-            self.gantry_speed = self.config["gantry"]["speed"] #mm/min
+            #with open("LIPI-Scanning/data/config/default.toml", "r") as f:
+            #    self.config = tomlkit.load(f)
+            self.fps = 50
+            self.tint = 2
+            self.gain = "Medium"
+            self.gantry_speed = 5000 #mm/min
+            #self.fps = self.config["camera"]["fps"]
+            #self.tint = self.config["camera"]["tint"]
+            #self.gain = self.config["camera"]["gain"]
+            #self.gantry_speed = self.config["gantry"]["speed"] #mm/min
             self.gantry_length = 2100 #mm #TODO: Add to config (Make proper gantry config)
 
-            buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
     
             self.camera_context = FliSdk_V2.Init()
             self.gantry_handler = None
-
-            FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)
 
             #UI Appearance
 
@@ -225,7 +226,9 @@ class LIPI_Scanner_App(ttk.Frame):
         self.update()
 
     def scan_module(self): #TODO: Implement this using the variables present in the UI
-        self.scan_module_button.config(text="Interupt", command=quit)
+        self.scan_module_button.config(text="Scanning...", state="disabled")
+        buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
+        FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)
         gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
         print("Not done!")
         

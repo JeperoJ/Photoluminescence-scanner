@@ -81,8 +81,8 @@ def scan_continuous(gcode_handler,context,savePath,frameRate,speed=5000):
     - The function waits for the gantry to complete its movement before finishing.
     - The scanned image is saved with a timestamp in the filename.
     """
-    offsetBegin=500 #offset from the first edge of the gantry to end stops. This is the 0-point in real life
-    offsetEnd=100 #offset from the last edge of the gantry to max travel of the axes
+    #offsetBegin=500 #offset from the first edge of the gantry to end stops. This is the 0-point in real life
+    #offsetEnd=100 #offset from the last edge of the gantry to max travel of the axes
     dist_travel=2000#(2500-offsetBegin-offsetEnd) #Distance with offset included
     nImages=int(dist_travel/(speed/60)*frameRate)
     bufferSize=nImages+400
