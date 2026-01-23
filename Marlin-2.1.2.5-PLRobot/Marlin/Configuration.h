@@ -1672,8 +1672,8 @@
 // @section motion
 
 // Invert the stepper direction. Change (or reverse the motor connector) if an axis goes the wrong way.
-#define INVERT_X_DIR false
-#define INVERT_Y_DIR false
+#define INVERT_X_DIR true
+#define INVERT_Y_DIR true
 #define INVERT_Z_DIR false
 //#define INVERT_I_DIR false
 //#define INVERT_J_DIR false
@@ -1726,8 +1726,8 @@
 // @section geometry
 
 // The size of the printable area
-#define X_BED_SIZE 2100
-#define Y_BED_SIZE 2000
+#define X_BED_SIZE 1900
+#define Y_BED_SIZE 1900
 
 // Travel limits (linear=mm, rotational=°) after homing, corresponding to endstop positions.
 #define X_MIN_POS 0
