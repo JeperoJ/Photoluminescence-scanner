@@ -15,8 +15,8 @@ __all__ = ['calibrate_camera', "init_camera", "disconnect", "list"]
 
 def list(context):
     grabbers = FliSdk_V2.DetectGrabbers(context)
-    for s in grabbers:
-        print(f"- {s}")
+    #for s in grabbers:
+    #    print(f"- {s}")
     return FliSdk_V2.DetectCameras(context)
 
 def calibrate_camera(context, adaptiveBias=False):

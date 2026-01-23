@@ -182,23 +182,23 @@ def acquireImage(context,bufferSize,framerate,nImages=4,savePath=0, fileName=0,d
 
     
     
-    FliSdk_V2.ImageProcessing.SetColorMap(context, -1, "RAINBOW")
+    #FliSdk_V2.ImageProcessing.SetColorMap(context, -1, "RAINBOW")
 
-    FliSdk_V2.Start(context)
+    #FliSdk_V2.Start(context)
 
     #Enable auto clip after start
-    FliSdk_V2.ImageProcessing.EnableAutoClip(context, -1, True)
+    #FliSdk_V2.ImageProcessing.EnableAutoClip(context, -1, True)
 
 
     #For showing images
-    val=bufferSize
-    if disp:
+    #val=bufferSize
+    """ if disp:
         for i in range(int(val)):
             # -1 to get the last image in the buffer
             image = FliSdk_V2.GetProcessedImage(context, -1)
             FliSdk_V2.Display8bImage(context, image, "image 8b")
             image = FliSdk_V2.GetRawImage(context, -1)
-            FliSdk_V2.Display16bImage(context, image, "image 16b", False)
+            FliSdk_V2.Display16bImage(context, image, "image 16b", False) """
         
     print("buffer at start:")
     print(FliSdk_V2.GetBufferFilling(context))
@@ -209,9 +209,9 @@ def acquireImage(context,bufferSize,framerate,nImages=4,savePath=0, fileName=0,d
 
     lastImageIndex = FliSdk_V2.GetBufferFilling(context) - 1 #Find the buffer size
     numImages = bufferSize #Define the total number of images wanted
-    if lastImageIndex<numImages:
-        print("Error: Number of images exceeds buffer size. Increase buffer or decrease nImages")
-        exit()
+    #if lastImageIndex<numImages:
+    #    print("Error: Number of images exceeds buffer size. Increase buffer or decrease nImages")
+    #    exit()
 
     #Get last image as np array and show it
     # fig=plt.figure()

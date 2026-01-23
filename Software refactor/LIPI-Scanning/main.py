@@ -28,92 +28,109 @@ from src import gantry_utils
 from src import camera_utils
 from src.camera_utils.FLI_API import FliSdk_V2
 
-class LIPI_Scanner_App():
+class LIPI_Scanner_App(ttk.Frame):
     def __init__(self, parent):
             #Initializing Application Variables
-            self.parent = parent
+            ttk.Frame.__init__(self, parent)
+            self = self
             with open("LIPI-Scanning/data/config/default.toml", "r") as f:
                 self.config = tomlkit.load(f)
             self.fps = self.config["camera"]["fps"]
             self.tint = self.config["camera"]["tint"]
             self.gain = self.config["camera"]["gain"]
-            self.speed = self.config["gantry"]["speed"]
+            self.gantry_speed = self.config["gantry"]["speed"] #mm/min
+            self.gantry_length = 2100 #mm #TODO: Add to config (Make proper gantry config)
+
+            buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
     
             self.camera_context = FliSdk_V2.Init()
             self.gantry_handler = None
+
+            FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)
+
+            #UI Appearance
+
+            parent.attributes('-fullscreen', True)
+            parent.protocol("WM_DELETE_WINDOW", quit)
+            s = ttk.Style()
+            s.configure('.', font=('Helvetica', 60))
+
+            my_font = font.Font(family='Helvetica', size=32)
+            parent.option_add("*Font", my_font)
 
             #UI Elements
 
             #Gantry
             com_ports = gantry_utils.get_ports()
-            self.gantry_dropdown = ttk.Combobox(self.parent, values=com_ports, state="readonly", postcommand=self.update)
-            self.gantry_button = ttk.Button(self.parent, text="Connect Gantry", command=self.connect_gantry)
+            self.gantry_dropdown = ttk.Combobox(self, values=com_ports, state="readonly", postcommand=self.update)
+            self.gantry_button = ttk.Button(self, text="Connect\nGantry", command=self.connect_gantry)
             #Camera
-            self.camera_dropdown = ttk.Combobox(self.parent, values=camera_utils.list(self.camera_context), state="readonly", postcommand=lambda: self.camera_dropdown.config(values=camera_utils.list(self.camera_context)))
-            self.camera_button = ttk.Button(self.parent, text="Connect Camera", command=self.connect_camera)
-            self.camera_preview_button = ttk.Button(self.parent, text="Preview", command=self.show_camera, state="disabled")
+            self.camera_dropdown = ttk.Combobox(self, values=camera_utils.list(self.camera_context), state="readonly", postcommand=lambda: self.camera_dropdown.config(values=camera_utils.list(self.camera_context)))
+            self.camera_button = ttk.Button(self, text="Connect\nCamera", command=self.connect_camera)
+            #self.camera_preview_button = ttk.Button(self, text="Preview", command=self.show_camera, state="disabled")
 
-            self.save_dir_frm = ttk.Frame(self.parent)
+            self.save_dir_frm = ttk.Frame(self)
             tk.Grid.columnconfigure(self.save_dir_frm, 0, weight=1)
             tk.Grid.rowconfigure(self.save_dir_frm, 0, weight=2)
             tk.Grid.rowconfigure(self.save_dir_frm, 1, weight=8)
-            save_dir_text = tk.StringVar()
-            ttk.Entry(self.save_dir_frm, textvariable=save_dir_text, font=("Helvetica", 18)).grid(row=0, column=0)
-            ttk.Button(self.save_dir_frm, text="Select Directory", command=self.select_directory).grid(row=1, column=0)
+            self.save_dir_text = tk.StringVar()
+            ttk.Entry(self.save_dir_frm, textvariable=self.save_dir_text, font=("Helvetica", 18)).grid(row=0, column=0, sticky="nsew")
+            ttk.Button(self.save_dir_frm, text="Select\nDirectory", command=self.select_directory).grid(row=1, column=0, sticky="nsew")
+
+            self.button_config = ttk.Button(self, text="Config\n(TBD)", state="disabled") #TODO: Implement Config Window
+
+            self.preview_frm = ttk.Frame(self)
+            self.preview = ttk.Label(self.preview_frm)
+            self.preview.pack(fill="both", expand=True)
 
 
-            self.scan_module_button = ttk.Button(self.parent, text="Start Scan", state="disabled", command=self.scan_module)
+            self.scan_module_button = ttk.Button(self, text="Start\nScan", state="disabled", command=self.scan_module)
 
-            self.quit_button = ttk.Button(self.parent, text="Quit", command=quit)
-
-            #UI Appearance
-
-            self.parent.attributes('-fullscreen', True)
-            self.parent.protocol("WM_DELETE_WINDOW", quit)
-            #Style Settings
-            tk.Grid.rowconfigure(self.parent, 0, weight=1)
-            tk.Grid.rowconfigure(self.parent, 1, weight=1)
-            tk.Grid.rowconfigure(self.parent, 2, weight=1)
-            tk.Grid.columnconfigure(self.parent, 0, weight=10)
-            tk.Grid.columnconfigure(self.parent, 1, weight=10)
-            tk.Grid.columnconfigure(self.parent, 2, weight=1)
-
-            s = ttk.Style()
-            s.configure('.', font=('Helvetica', 60))
-
-            my_font = font.Font(family='Helvetica', size=32)
-            self.parent.option_add("*Font", my_font)
+            self.quit_button = ttk.Button(self, text="Quit", command=quit)
 
             #Organizing UI Elements
+            tk.Grid.rowconfigure(self, 0, weight=1)
+            tk.Grid.rowconfigure(self, 1, weight=1)
+            tk.Grid.rowconfigure(self, 2, weight=1)
+            tk.Grid.columnconfigure(self, 0, weight=1)
+            tk.Grid.columnconfigure(self, 1, weight=1)
+            tk.Grid.columnconfigure(self, 2, weight=1)
+            tk.Grid.columnconfigure(self, 3, weight=1)
+
             padding = 5
             self.gantry_dropdown.grid(row=0, column=0, sticky="nsew", padx=padding, pady=padding)
             self.gantry_button.grid(row=0, column=1, sticky="nsew", padx=padding, pady=padding)
 
             self.camera_dropdown.grid(row=1, column=0, sticky="nsew", padx=padding, pady=padding)
             self.camera_button.grid(row=1, column=1, sticky="nsew", padx=padding, pady=padding)
-            self.camera_preview_button.grid(row=1, column=2, sticky="nsew", padx=padding, pady=padding)
+            #self.camera_preview_button.grid(row=1, column=2, sticky="nsew", padx=padding, pady=padding)
 
+            self.button_config.grid(row=2, column=1, sticky="nsew", padx=padding, pady=padding)
             self.save_dir_frm.grid(row=2, column=0, sticky="nsew", padx=padding, pady=padding)
-            self.scan_module_button.grid(row=2, column=1, sticky="nsew", padx=padding, pady=padding)
-            self.quit_button.grid(row=2, column=2, sticky="nsew", padx=padding, pady=padding)
+
+
+            self.preview_frm.grid(row=0, column=2, rowspan=2, columnspan=2, sticky="nsew", padx=padding, pady=padding)
+            self.scan_module_button.grid(row=2, column=2, sticky="nsew", padx=padding, pady=padding)
+            self.quit_button.grid(row=2, column=3, sticky="nsew", padx=padding, pady=padding)
+            
 
 
     def update(self):
     #print("UPDATING")
         self.com_ports = gantry_utils.get_ports()
         self.gantry_dropdown.config(values=self.com_ports)
-        if str(self.camera_button["state"]) == "disabled" and str(self.gantry_button["state"]) == "disabled" and save_dir_text.get() != "":
+        if str(self.camera_button["state"]) == "disabled" and str(self.gantry_button["state"]) == "disabled" and self.save_dir_text.get() != "":
             self.scan_module_button.config(state="enabled")
 
     def quit(self):
         camera_utils.disconnect(self.camera_context)
         if self.gantry_handler is not None:
             self.gantry_handler.disconnect()
-        self.parent.destroy()
+        self.destroy()
         sys.exit()
 
     def popup(self, title, text, dismiss=False):
-        popup = tk.Toplevel(self.parent)
+        popup = tk.Toplevel(self)
         popup.title(title)
         #popup.geometry("600x200")
         popup.grab_set()  # Make modal, locks root window
@@ -121,7 +138,7 @@ class LIPI_Scanner_App():
         popup.update()
         if dismiss:
             ttk.Button(popup, text="OK", command=popup.destroy).pack()
-            self.parent.wait_window(popup)  # Wait for popup to close
+            self.wait_window(popup)  # Wait for popup to close
         if not dismiss:
             return popup
 
@@ -158,10 +175,24 @@ class LIPI_Scanner_App():
         camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
         self.camera_button.config(text="Camera Ready", state="disabled")
         _popup.destroy()
-        self.camera_preview_button.config(state="enabled")
+        FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
+        FliSdk_V2.ImageProcessing.SetColorMap(self.camera_context, -1, "RAINBOW") #TODO: Play around with color maps
+        FliSdk_V2.Start(self.camera_context)
+        self.camera_display_loop()
+        #self.camera_preview_button.config(state="enabled")
         self.update()
 
-    def show_image_loop(self, window, image_label):
+    def camera_display_loop(self):
+        image = FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1) #-1 to get the last image in the buffer
+        #print(image)
+        #print(np.array(image))
+        img = Image.fromarray(image, mode="RGBA")
+        photo = ImageTk.PhotoImage(image=img)
+        self.preview.image = photo
+        self.preview.configure(image=photo)
+        self.after(20, self.camera_display_loop)
+
+    """ def show_image_loop(self, window, image_label):
         image = FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1) #-1 to get the last image in the buffer
         #print(image)
         #print(np.array(image))
@@ -173,7 +204,7 @@ class LIPI_Scanner_App():
         window.after(20, self.show_image_loop, window, image_label)
 
     def show_camera(self):
-        popup = tk.Toplevel(self.parent)
+        popup = tk.Toplevel(self)
         popup.title("Camera Preview")
         #popup.geometry("600x200")
         popup.grab_set()  # Make modal, locks root window
@@ -184,8 +215,8 @@ class LIPI_Scanner_App():
         image_label.pack(pady=10, fill="both", expand=True)
         ttk.Button(popup, text="Close", command=popup.destroy).pack()
         self.show_image_loop(popup, image_label)
-        self.parent.wait_window(popup)  # Wait for popup to close
-        FliSdk_V2.Stop(self.camera_context)
+        self.wait_window(popup)  # Wait for popup to close
+        FliSdk_V2.Stop(self.camera_context) """
 
     def select_directory(self):
         dir_path = filedialog.askdirectory()
@@ -195,13 +226,13 @@ class LIPI_Scanner_App():
 
     def scan_module(self): #TODO: Implement this using the variables present in the UI
         self.scan_module_button.config(text="Interupt", command=quit)
-        gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.speed)
+        gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
         print("Not done!")
         
 
 def main():
     root = tk.Tk()
-    LIPI_Scanner_App(root)
+    LIPI_Scanner_App(root).pack(fill="both", expand=True)
     root.mainloop()
 
 if __name__ == "__main__":
