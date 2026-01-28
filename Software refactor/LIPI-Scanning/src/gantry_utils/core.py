@@ -4,6 +4,7 @@ import datetime
 import os
 from . import gCodeHandler
 from src.camera_utils import imageAcquisition
+import datetime
 
 __all__ = ['get_ports', 'scan_continuous', "connect", "calibrate"]
 #TODO: Make Self Contained to avoid handling gantry context outside
@@ -86,8 +87,8 @@ def scan_continuous(gcode_handler,context,savePath,frameRate,speed=5000):
     dist_travel=2000#(2500-offsetBegin-offsetEnd) #Distance with offset included
     nImages=int(dist_travel/(speed/60)*frameRate)
     bufferSize=nImages+400
-    gcode_handler.set_speed([speed,speed]) #set speed for both axes
+    gcode_handler.set_speed(speed) #set speed for both axes
     gcode_handler.set_position(200,0)
     gcode_handler.set_position(dist_travel+100,dist_travel)
-    imageAcquisition.acquireImage(context,bufferSize,frameRate,nImages,savePath, fileName="scan")
+    imageAcquisition.acquireImage(context,bufferSize,frameRate,nImages,savePath, fileName=f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
     gcode_handler.wait()

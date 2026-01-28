@@ -27,6 +27,9 @@ from  PIL import ImageTk, Image
 from src import gantry_utils
 from src import camera_utils
 from src.camera_utils.FLI_API import FliSdk_V2
+import threading
+import time
+import datetime
 
 class LIPI_Scanner_App(ttk.Frame):
     def __init__(self, parent):
@@ -48,6 +51,8 @@ class LIPI_Scanner_App(ttk.Frame):
     
             self.camera_context = FliSdk_V2.Init()
             self.gantry_handler = None
+
+            #print(FliSdk_V2.ImageProcessing.GetColorMapList(self.camera_context, -1))
 
             #UI Appearance
 
@@ -80,9 +85,10 @@ class LIPI_Scanner_App(ttk.Frame):
 
             self.button_config = ttk.Button(self, text="Config\n(TBD)", state="disabled") #TODO: Implement Config Window
 
-            self.preview_frm = ttk.Frame(self)
+            self.preview_frm = ttk.Frame(self, width=640, height=512)
             self.preview = ttk.Label(self.preview_frm)
             self.preview.pack(fill="both", expand=True)
+            #self.preview.pack(fill="both", expand=True)
 
 
             self.scan_module_button = ttk.Button(self, text="Start\nScan", state="disabled", command=self.scan_module)
@@ -90,13 +96,19 @@ class LIPI_Scanner_App(ttk.Frame):
             self.quit_button = ttk.Button(self, text="Quit", command=quit)
 
             #Organizing UI Elements
-            tk.Grid.rowconfigure(self, 0, weight=1)
+            row_weights = [1,1,1]
+            col_weights = [1,1,1,1]
+            for i, weight in enumerate(row_weights):
+                tk.Grid.rowconfigure(self, i, weight=weight)
+            for i, weight in enumerate(col_weights):
+                tk.Grid.columnconfigure(self, i, weight=weight)
+            """ tk.Grid.rowconfigure(self, 0, weight=1)
             tk.Grid.rowconfigure(self, 1, weight=1)
             tk.Grid.rowconfigure(self, 2, weight=1)
             tk.Grid.columnconfigure(self, 0, weight=1)
             tk.Grid.columnconfigure(self, 1, weight=1)
             tk.Grid.columnconfigure(self, 2, weight=1)
-            tk.Grid.columnconfigure(self, 3, weight=1)
+            tk.Grid.columnconfigure(self, 3, weight=1) """
 
             padding = 5
             self.gantry_dropdown.grid(row=0, column=0, sticky="nsew", padx=padding, pady=padding)
@@ -177,21 +189,21 @@ class LIPI_Scanner_App(ttk.Frame):
         self.camera_button.config(text="Camera Ready", state="disabled")
         _popup.destroy()
         FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
-        FliSdk_V2.ImageProcessing.SetColorMap(self.camera_context, -1, "RAINBOW") #TODO: Play around with color maps
+        FliSdk_V2.ImageProcessing.SetColorMap(self.camera_context, -1, "NONE") #TODO: Play around with color maps
         FliSdk_V2.Start(self.camera_context)
-        self.camera_display_loop()
+        #self.camera_display_loop()
+        threading.Thread(target=self.camera_display_loop, daemon=True)
         #self.camera_preview_button.config(state="enabled")
         self.update()
 
     def camera_display_loop(self):
-        image = FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1) #-1 to get the last image in the buffer
-        #print(image)
-        #print(np.array(image))
-        img = Image.fromarray(image, mode="RGBA")
-        photo = ImageTk.PhotoImage(image=img)
-        self.preview.image = photo
-        self.preview.configure(image=photo)
-        self.after(20, self.camera_display_loop)
+        while True:
+            image = FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1) #-1 to get the last image in the buffer
+            img = Image.fromarray(image, mode="RGBA")
+            photo = ImageTk.PhotoImage(image=img)
+            self.preview.image = photo
+            self.preview.configure(image=photo)
+            time.sleep(1/self.fps)
 
     """ def show_image_loop(self, window, image_label):
         image = FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1) #-1 to get the last image in the buffer

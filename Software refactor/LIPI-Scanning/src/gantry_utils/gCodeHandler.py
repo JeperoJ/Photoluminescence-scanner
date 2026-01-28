@@ -133,6 +133,12 @@ class GCodeHandler:
         t=self.send_gcode("M400")
         while "ok" not in t:
             t = self.send_gcode("M400")
+    def wait1step(self):
+        #Wait for gantry to finish movement
+        t=self.send_gcode("M400")
+        if "ok" not in t:
+            return False
+        return True
 
     def error_handler(self, response):
         if "error" in response.lower():
