@@ -3,7 +3,7 @@ import sys
 import datetime
 import os
 from . import gCodeHandler
-from src.camera_utils import imageAcquisition
+from src.camera import imageAcquisition
 import datetime
 
 __all__ = ['get_ports', 'scan_continuous', "connect", "calibrate"]
@@ -25,44 +25,40 @@ def connect(device):
     gcode_handler.connect()
     return gcode_handler
 
-def calibrate(gcode_handler):
+def calibrate(gcode_handler, timeout=None):
     """
     Calibration method for parallel X Y gantry. First, check if end stops are functional, even if they are triggered. Then, home the gantry.
     """
     #First make sure no end stops are triggered:
-    try:
-        endStop= ["M120", #enable end stops
-            "M119", #Check end stop status
-        ]
-        t=gcode_handler.send_gcode(endStop)
+    endStop= ["M120", #enable end stops
+        "M119", #Check end stop status
+    ]
+    t=gcode_handler.send_gcode(endStop)
+    axis_trig = []
+    count = 0  # count for error. Do not loop forever, max two times for each axis
+    while any("TRIGGERED" in line for line in t) and count < 2:
+        #Check end stops
         axis_trig = []
-        count = 0  # count for error. Do not loop forever, max two times for each axis
-        while any("TRIGGERED" in line for line in t) and count < 2:
-            #Check end stops
-            axis_trig = []
-            for line in t:
-                    if "TRIGGERED" in line:
-                        axis = line.split("_")[0]  # Get the axis letter (X, Y, Z, etc.)
-                        axis_trig.append(axis)
-            print(f"End stop for axis(es) {', '.join(axis_trig)} is triggered. Attempting to move away.")
-            if axis == 'x' or axis == 'x2':
-                gcode_handler.send_gcode("G0 X30")
-                gcode_handler.wait()
-            elif axis == 'y' or axis == 'y2':
-                gcode_handler.send_gcode("G0 Y30")
-                gcode_handler.wait()
-            else:
-                raise ValueError(f"Unknown axis {axis} in end stop status.")
-            t = gcode_handler.send_gcode("M119")
-            count += 1
-                # if "TRIGGERED" in t:
-                #     raise RuntimeError(f"End stop for axis {axis} is still triggered after moving.")
-    except:
-        print("Error checking end stops")
-        sys.exit()
+        for line in t:
+                if "TRIGGERED" in line:
+                    axis = line.split("_")[0]  # Get the axis letter (X, Y, Z, etc.)
+                    axis_trig.append(axis)
+        print(f"End stop for axis(es) {', '.join(axis_trig)} is triggered. Attempting to move away.")
+        if axis == 'x' or axis == 'x2':
+            gcode_handler.send_gcode("G0 X30")
+            gcode_handler.wait(timeout=10)
+        elif axis == 'y' or axis == 'y2':
+            gcode_handler.send_gcode("G0 Y30")
+            gcode_handler.wait(timeout=10)
+        else:
+            raise ValueError(f"Unknown axis {axis} in end stop status.")
+        t = gcode_handler.send_gcode("M119")
+        count += 1
+            # if "TRIGGERED" in t:
+            #     raise RuntimeError(f"End stop for axis {axis} is still triggered after moving.")
     
     gcode_handler.auto_home()
-    gcode_handler.wait()
+    gcode_handler.wait(timeout = timeout)
     print("Gantry homed!")
 
 def scan_continuous(gcode_handler,context,savePath,frameRate,speed=5000):

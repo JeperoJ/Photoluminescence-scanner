@@ -49,17 +49,17 @@ class GCodeHandler:
         #Set end stops
 
     def connect(self):
-        try:
-            self.serial_connection = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
-            time.sleep(2)  # Wait for the connection to establish
-            if self.serial_connection.is_open:
-                print(f"Connected to {self.port} at {self.baudrate} baud.")
-            else:
-                print(f"Failed to open serial connection to {self.port}.")
-                sys.exit(0)
-        except serial.SerialException as e:
+        self.serial_connection = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
+        time.sleep(2)  # Wait for the connection to establish
+        if self.serial_connection.is_open:
+            print(f"Connected to {self.port} at {self.baudrate} baud.")
+        else:
+            print(f"Failed to open serial connection to {self.port}.")
+            raise TimeoutError
+        
+        """ except serial.SerialException as e:
             print(f"Error connecting to {self.port}: {e}")
-            sys.exit(0)
+            sys.exit(0) """
 
     def disconnect(self):
         if self.serial_connection and self.serial_connection.is_open:
@@ -120,7 +120,7 @@ class GCodeHandler:
         #home all motors to end stops
         self.send_gcode("G90") #Set absolute positioning
         res= self.send_gcode("G28 X Y") # for now, only home X. Change when both axes mounted!!
-        self.wait()
+        #self.wait()
         #self.send_gcode("G90") #Set relative positioning
         self.send_gcode("M666 X-0.5") #Set end stop offset for X
     def jog(self, x, y):
@@ -128,11 +128,26 @@ class GCodeHandler:
         self.send_gcode("G91") #Set relative positioning
         self.send_gcode("G0 X{} Y{} F{}".format(x, y, self.speed))
         self.send_gcode("G90")
-    def wait(self):
-        #Wait for gantry to finish movement
+    def wait(self, timeout=None):
+        """
+        Waits for gantry movement to finish. If timeout specifies, will raise TimeoutError if movement does not finish within the timeout period.
+
+        Parameters:
+        timeout: Timeout in seconds. If None, no timeout is applied (default: None)
+        Raises:
+        TimeoutError: If time elapsed exceeds the specified timeout.
+
+        """
         t=self.send_gcode("M400")
-        while "ok" not in t:
-            t = self.send_gcode("M400")
+        if timeout is None:
+            while "ok" not in t:
+                t = self.send_gcode("M400")
+        else:
+            start_time = time.time()
+            while "ok" not in t:
+                if time.time() - start_time > timeout:
+                    raise TimeoutError("Gantry wait timed out.")
+                t = self.send_gcode("M400")
     def wait1step(self):
         #Wait for gantry to finish movement
         t=self.send_gcode("M400")

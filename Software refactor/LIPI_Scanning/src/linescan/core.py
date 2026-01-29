@@ -1,6 +1,6 @@
 import os
-from ...src import camera_utils, gantry_utils
-from ...src.camera_utils.FLI_API import FliSdk_V2
+from ...src import camera, gantry
+from ...src.camera.FLI_API import FliSdk_V2
 
 __all__ = ["continuous"]
 
