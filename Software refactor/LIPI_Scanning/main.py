@@ -208,13 +208,14 @@ class LIPI_Scanner_App(ttk.Frame):
         self.popup("Camera Calibration", "Please put on the camera lens cap and press OK to continue.", dismiss=True)
         _popup = self.popup("Camera Calibration", "Calibrating camera_utils. Please wait...")
         _popup.update()
-        try:
+        camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
+        """ try:
             camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
         except Exception as e:
             _popup.destroy()
             print(e)
             self.popup("Camera Calibration", "Calibration Failed. No idea why. Check terminal output and consider pulling the power.", dismiss=True, sound=True)
-            return
+            return """
         self.camera_button.config(text="Camera Ready", state="disabled")
         _popup.destroy()
         FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
