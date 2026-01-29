@@ -74,8 +74,9 @@ def BuildNUCBias(context):
     print("Building bias")
     res = FliSdk_V2.FliCred.BuildBias(context)
     if not res:
+        print(res)
         print("Error while building bias.")
-        exit()
+        raise ValueError("BIAS???")
     print("Bias built! Enabling...")
     FliSdk_V2.FliSerialCamera.EnableBias(context, True)
     print("Bias Enabled!")
