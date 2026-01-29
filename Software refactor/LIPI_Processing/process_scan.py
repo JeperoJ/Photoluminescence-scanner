@@ -43,7 +43,7 @@ cal_path = None
 print("Loading calibration")
 user=input("Use default path?[(y)/n]: ")
 if user=="y" or user=="":
-    cal_path = os.path.join(os.getcwd(), "data/calibration")
+    cal_path = os.path.join(os.getcwd(), "data\\calibration")
 elif user=="n":
     user = input("Navigate to calibration files using: 1. File Selection Dialog 2. Manually Entering Filepath: ")
     if user=="1":
