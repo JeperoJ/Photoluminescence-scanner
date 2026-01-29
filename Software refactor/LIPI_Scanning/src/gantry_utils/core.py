@@ -3,7 +3,7 @@ import sys
 import datetime
 import os
 from . import gCodeHandler
-from src.camera import imageAcquisition
+from src.camera_utils import imageAcquisition
 import datetime
 
 __all__ = ['get_ports', 'scan_continuous', "connect", "calibrate"]

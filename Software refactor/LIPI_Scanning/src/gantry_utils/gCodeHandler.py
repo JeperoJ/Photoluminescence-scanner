@@ -138,7 +138,7 @@ class GCodeHandler:
         TimeoutError: If time elapsed exceeds the specified timeout.
 
         """
-        t=self.send_gcode("M400")
+        t=self.send_gcode("M400") #TODO: Catch marlin timeout/kill command
         if timeout is None:
             while "ok" not in t:
                 t = self.send_gcode("M400")

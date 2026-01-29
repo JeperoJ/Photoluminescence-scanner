@@ -24,9 +24,8 @@ import os
 import tomlkit
 import numpy as np
 from  PIL import ImageTk, Image
-from src import gantry
-from src import camera
-from src.camera.FLI_API import FliSdk_V2
+from src import gantry_utils, camera_utils
+from src.camera_utils.FLI_API import FliSdk_V2
 import threading
 import time
 import datetime
@@ -67,11 +66,11 @@ class LIPI_Scanner_App(ttk.Frame):
             #UI Elements
 
             #Gantry
-            com_ports = gantry.get_ports()
+            com_ports = gantry_utils.get_ports()
             self.gantry_dropdown = ttk.Combobox(self, values=com_ports, state="readonly", postcommand=self.update)
             self.gantry_button = ttk.Button(self, text="Connect Gantry", command=self.connect_gantry)
             #Camera
-            self.camera_dropdown = ttk.Combobox(self, values=camera.list(self.camera_context), state="readonly", postcommand=self.update)
+            self.camera_dropdown = ttk.Combobox(self, values=camera_utils.list(self.camera_context), state="readonly", postcommand=self.update)
             self.camera_button = ttk.Button(self, text="Connect Camera", command=self.connect_camera)
 
             self.save_dir_frm = ttk.Frame(self)
@@ -115,9 +114,9 @@ class LIPI_Scanner_App(ttk.Frame):
             self.quit_button.grid(row=4, column=3, sticky="nsew", padx=padding, pady=padding)
 
     def update(self):
-        self.com_ports = gantry.get_ports()
+        self.com_ports = gantry_utils.get_ports()
         self.gantry_dropdown.config(values=self.com_ports)
-        self.camera_dropdown.config(values=camera.list(self.camera_context))
+        self.camera_dropdown.config(values=camera_utils.list(self.camera_context))
 
         if str(self.camera_button["state"]) == "disabled" and str(self.gantry_button["state"]) == "disabled" and self.save_dir_text.get() != "" and str(self.scan_module_button["text"])=="Start\nScan":
             self.scan_module_button.config(state="enabled")
@@ -125,7 +124,7 @@ class LIPI_Scanner_App(ttk.Frame):
         super().update()
 
     def quit(self):
-        camera.disconnect(self.camera_context)
+        camera_utils.disconnect(self.camera_context)
         if self.gantry_handler is not None:
             self.gantry_handler.disconnect()
         self.destroy()
@@ -151,9 +150,9 @@ class LIPI_Scanner_App(ttk.Frame):
         if self.gantry_dropdown.get() == "":
             self.popup("Gantry Connection", "No gantry port selected!", dismiss=True)
             return
-        _popup = self.popup("Gantry Connection", "Connecting to gantry. Please wait...")
+        _popup = self.popup("Gantry Connection", "Connecting to gantry_utils. Please wait...")
         try:
-            self.gantry_handler = gantry.connect(self.com_ports[[str(port) for port in self.com_ports].index(self.gantry_dropdown.get())])
+            self.gantry_handler = gantry_utils.connect(self.com_ports[[str(port) for port in self.com_ports].index(self.gantry_dropdown.get())])
         except (TimeoutError,serial.SerialException) as e:
             _popup.destroy()
             print(e)
@@ -171,10 +170,10 @@ class LIPI_Scanner_App(ttk.Frame):
 
     def calibrate_gantry(self):
         self.popup("Gantry Calibration", "Please make sure the gantry area is clear and press OK to continue.", dismiss=True)
-        _popup = self.popup("Gantry Calibration", "Calibrating gantry. Please wait...")
+        _popup = self.popup("Gantry Calibration", "Calibrating gantry_utils. Please wait...")
 
         try:
-            gantry.calibrate(self.gantry_handler)
+            gantry_utils.calibrate(self.gantry_handler)
         except TimeoutError as e:
             _popup.destroy()
             print(e)
@@ -193,13 +192,13 @@ class LIPI_Scanner_App(ttk.Frame):
         if self.camera_dropdown.get() == "":
             self.popup("Camera Connection", "No camera selected!", dismiss=True)
             return
-        _popup = self.popup("Camera Initialization", "Connecting to camera. Please wait...")
+        _popup = self.popup("Camera Initialization", "Connecting to camera_utils. Please wait...")
         try:
-            camera.init_camera(self.camera_context, self.fps, self.tint, self.camera_dropdown.get(), gain=self.gain)
+            camera_utils.init_camera(self.camera_context, self.fps, self.tint, self.camera_dropdown.get(), gain=self.gain)
         except Exception as e:
             _popup.destroy()
             print(e)
-            self.popup("Camera Connection", "Connection Failed. Check that the camera is connected and powered, or try a different camera.", dismiss=True)
+            self.popup("Camera Connection", "Connection Failed. Check that the camera is connected and powered, or try a different camera_utils.", dismiss=True)
             return
         self.camera_button.config(text="Calibrate", command=self.calibrate_camera)
         _popup.destroy()
@@ -207,10 +206,10 @@ class LIPI_Scanner_App(ttk.Frame):
 
     def calibrate_camera(self):
         self.popup("Camera Calibration", "Please put on the camera lens cap and press OK to continue.", dismiss=True)
-        _popup = self.popup("Camera Calibration", "Calibrating camera. Please wait...")
+        _popup = self.popup("Camera Calibration", "Calibrating camera_utils. Please wait...")
         _popup.update()
         try:
-            camera.calibrate_camera(self.camera_context, adaptiveBias=False)
+            camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
         except Exception as e:
             _popup.destroy()
             print(e)
@@ -275,12 +274,14 @@ class LIPI_Scanner_App(ttk.Frame):
         print(f"Buffer size images: {buffer_size_images}")
         FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)
         print(f"Context buffer size: {FliSdk_V2.GetBufferSizeInImages(self.camera_context)}")
-        gantry.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
-        self.scan_module_button.config(text="Reset\nGantry", state="enabled", command=self.reset)
+        gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
+        self.scan_module_button.config(text="Scanned")
+        #self.scan_module_button.config(text="Reset\nGantry", state="enabled", command=self.reset)
 
-    def reset(self):
+    """ def reset(self):
         self.scan_module_button.config(text="Resetting...", state="disabled")
         self.update()
+        self.gantry_handler """
         
 
 def main():
