@@ -25,12 +25,16 @@ import tomlkit
 import numpy as np
 from  PIL import ImageTk, Image
 from src import gantry_utils, camera_utils
-from src.camera_utils.FLI_API import FliSdk_V2
 import threading
 import time
 import datetime
 import serial
 import winsound
+
+fli_path = os.path.abspath(os.path.join(os.getenv('FLISDK_DIR'), "Python/lib"))
+if fli_path not in sys.path:
+    sys.path.append(fli_path)
+import FliSdk_V2
 
 class LIPI_Scanner_App(ttk.Frame):
     def __init__(self, parent):
@@ -46,7 +50,7 @@ class LIPI_Scanner_App(ttk.Frame):
             #self.tint = self.config["camera"]["tint"]
             #self.gain = self.config["camera"]["gain"]
             #self.gantry_speed = self.config["gantry"]["speed"] #mm/min
-            self.gantry_length = 2100 #mm #TODO: Add to config (Make proper gantry config)
+            self.gantry_length = 2100 #mm TODO: Add to config (Make proper gantry config)
 
             self.camera_context = FliSdk_V2.Init()
             self.gantry_handler = None
@@ -127,8 +131,8 @@ class LIPI_Scanner_App(ttk.Frame):
         camera_utils.disconnect(self.camera_context)
         if self.gantry_handler is not None:
             self.gantry_handler.disconnect()
-        self.destroy()
-        sys.exit()
+
+        super().quit()
 
     def popup(self, title, text, dismiss=False, sound=False):
         popup = tk.Toplevel(self)

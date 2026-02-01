@@ -1,4 +1,4 @@
-from .FLI_API import FliSdk_V2
+import FliSdk_V2
 import logging
 
 logger = logging.getLogger(__name__)
@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 def set_fps(context,val):
     valFloat = float(val)
-
     if FliSdk_V2.IsSerialCamera(context):
         _, fps_old = FliSdk_V2.FliSerialCamera.GetFps(context)
         FliSdk_V2.FliSerialCamera.SetFps(context, valFloat)
