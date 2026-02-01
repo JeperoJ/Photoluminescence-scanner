@@ -52,10 +52,12 @@ class GCodeHandler:
         self.serial_connection = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         time.sleep(2)  # Wait for the connection to establish
         if self.serial_connection.is_open:
+            response = self.send_gcode("M115")
+            print(response) #TODO: Decode if response is a valid response
             print(f"Connected to {self.port} at {self.baudrate} baud.")
         else:
             print(f"Failed to open serial connection to {self.port}.")
-            raise TimeoutError
+            raise TimeoutError("Serial connection timed out.")
         
         """ except serial.SerialException as e:
             print(f"Error connecting to {self.port}: {e}")

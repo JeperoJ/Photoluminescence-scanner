@@ -92,6 +92,7 @@ class LIPI_Scanner_App(ttk.Frame):
             self.preview.pack(fill="both", expand=True)
         
             self.scan_module_button = ttk.Button(self, text="Start\nScan", state="disabled", command=self.scan_module)
+            #self.scan_module_button = ttk.Button(self, text="Start\nScan", command=self.temp)
 
             self.quit_button = ttk.Button(self, text="Quit", command=quit)
 
@@ -122,7 +123,7 @@ class LIPI_Scanner_App(ttk.Frame):
         self.gantry_dropdown.config(values=self.com_ports)
         self.camera_dropdown.config(values=camera_utils.list(self.camera_context))
 
-        if str(self.camera_button["state"]) == "disabled" and str(self.gantry_button["state"]) == "disabled" and self.save_dir_text.get() != "" and str(self.scan_module_button["text"])=="Start\nScan":
+        if FliSdk_V2.IsStarted(self.camera_context) and str(self.gantry_button["state"]) == "disabled" and self.save_dir_text.get() != "" and str(self.scan_module_button["text"])=="Start\nScan":
             self.scan_module_button.config(state="enabled")
 
         super().update()
@@ -169,6 +170,7 @@ class LIPI_Scanner_App(ttk.Frame):
             return
 
         self.gantry_button.config(text="Calibrate Gantry", command=self.calibrate_gantry)
+        self.gantry_dropdown.config(state="disabled")
         _popup.destroy()
         self.update()
 
@@ -196,7 +198,7 @@ class LIPI_Scanner_App(ttk.Frame):
         if self.camera_dropdown.get() == "":
             self.popup("Camera Connection", "No camera selected!", dismiss=True)
             return
-        _popup = self.popup("Camera Initialization", "Connecting to camera_utils. Please wait...")
+        _popup = self.popup("Camera Initialization", "Connecting to camera. Please wait...")
         try:
             camera_utils.init_camera(self.camera_context, self.fps, self.tint, self.camera_dropdown.get(), gain=self.gain)
         except Exception as e:
@@ -205,12 +207,13 @@ class LIPI_Scanner_App(ttk.Frame):
             self.popup("Camera Connection", "Connection Failed. Check that the camera is connected and powered, or try a different camera_utils.", dismiss=True)
             return
         self.camera_button.config(text="Calibrate", command=self.calibrate_camera)
+        self.camera_dropdown.config(state="disabled")
         _popup.destroy()
         self.update()
 
     def calibrate_camera(self):
         self.popup("Camera Calibration", "Please put on the camera lens cap and press OK to continue.", dismiss=True)
-        _popup = self.popup("Camera Calibration", "Calibrating camera_utils. Please wait...")
+        _popup = self.popup("Camera Calibration", "Calibrating camera. Please wait...")
         _popup.update()
         camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
         """ try:
@@ -273,6 +276,13 @@ class LIPI_Scanner_App(ttk.Frame):
         self.update()
 
     def scan_module(self): #TODO: Implement this using the variables present in the UI
+        self.popup("Scanning",
+                   """Verify that:
+                       -Camera cover is off
+                       -Lightbar is on
+                       -Scanner area is clear
+                   Scanning will proceed when \"OK\" is pressed.""",
+                   dismiss=True, sound=True)
         self.scan_module_button.config(text="Scanning...", state="disabled")
         self.update()
         buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
@@ -282,6 +292,7 @@ class LIPI_Scanner_App(ttk.Frame):
         gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
         self.scan_module_button.config(text="Scanned")
         #self.scan_module_button.config(text="Reset\nGantry", state="enabled", command=self.reset)
+        self.popup("Scanning", "Scan completed. Turn off lighbar.", dismiss=True, sound=True)
 
     """ def reset(self):
         self.scan_module_button.config(text="Resetting...", state="disabled")
