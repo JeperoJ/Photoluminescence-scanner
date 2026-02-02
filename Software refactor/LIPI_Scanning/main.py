@@ -42,8 +42,8 @@ class LIPI_Scanner_App(ttk.Frame):
             super().__init__(parent)
             #with open("LIPI-Scanning/data/config/default.toml", "r") as f:
             #    self.config = tomlkit.load(f)
-            self.fps = 50
-            self.tint = 2
+            self.fps = 300
+            self.tint = 1
             self.gain = "Medium"
             self.gantry_speed = 5000 #mm/min
             #self.fps = self.config["camera"]["fps"]
