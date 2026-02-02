@@ -159,7 +159,7 @@ __all__ = ["continuous"]
 #     print("partial Geometric PL geometric image saved as: ", "GeoPL" + savename)
 
 
-def continuous(images, speed, fps, cam_height=1045, f=6, drift=0.02448):
+def continuous(images, speed, fps, cam_height=945, f=6, drift=0.02448, show_append=False):
     """
         Stitches a sequence of images together based on geometric alignment and optional drift correction.
         Returns a stitched image either as a .tiff (int16) or a .png (uint8 linearly stretched) and saves it to the specified path.
@@ -205,7 +205,7 @@ def continuous(images, speed, fps, cam_height=1045, f=6, drift=0.02448):
     ###########
     #We know the physical position of the traveled distance, which corresponds to a pixel dist
     #dist_travel/cameraHeight=d/f
-    d_offset = 200 / cam_height * f  #distance in mm on image plane
+    #d_offset = 200 / cam_height * f  #distance in mm on image plane
     dpf_f = dpf / cam_height * f  #distance per frame in mm on image plane
     px_ratio_x = 15  #um/px in x dir
     #pxratioy = px_ratio_x  #um/px in y dir -
@@ -213,23 +213,38 @@ def continuous(images, speed, fps, cam_height=1045, f=6, drift=0.02448):
     dpf_px = dpf_f / (px_ratio_x / 1000)  #distance per frame in px on image plane
     #Find first PL line
     im = images[0]
-    peakIdx = helpers.peak_intensity(im, axis=0)  #Find peak intensity for PL detection - just to start the scan off. Could probably be hardcoded for robustness
+    #peakIdx = helpers.peak_intensity(im, axis=0)  #Find peak intensity for PL detection - just to start the scan off. Could probably be hardcoded for robustness
     #print("peakIdx: ", peakIdx) #DEBUG
-    peakIdx = 232
-
+    peakIdx = 194
+    shape=(np.shape(im)[0],len(images))
     #given the speed, we know the distance between subsequent images. Interpolating line placement in each image
-    PLimg = np.zeros((np.shape(im)[0], len(images)), dtype=np.int16)
+    PLimg = np.zeros(shape, dtype=np.int16)
     #if there is a drift variable, the peak index needs to be adjusted
     dvar = 0
     if drift:
         dvar = drift
     # print("PLimg dtype before: ",PLimg.dtype)
     #Loop through and append
+    show_append=False
     for i in range(len(images)):
         im = images[i]
         PLidx = int(i * dpf_px)
         PLimg[:, PLidx] = im[
             :, int(peakIdx + dvar * i)]  #drift factor corrects here. append the index based on the dpf_px value
+        #imshow for debugging - show window around appended line
+        if show_append:
+            linstretched_window = ingaas_processing.lin_stretch_img(im, 1, 99.99)
+            imageRGB = cv2.cvtColor(linstretched_window, cv2.COLOR_GRAY2BGR)
+            # Draw line at peakIdx + drift correction
+            line_x = int(peakIdx + dvar * i)
+            line_x = max(0, min(line_x, linstretched_window.shape[1] - 1))
+            line_color = (255, 0, 0)
+            cv2.line(imageRGB, (line_x, 0), (line_x, shape[0]), line_color, 1)
+            cv2.imshow("PL image - continuous (window)", imageRGB)
+            cv2.waitKey(1)
+
+    cv2.destroyAllWindows()
+
 
     PLimg = ingaas_processing.crop_image(PLimg)
     return PLimg

@@ -4,12 +4,14 @@ import os
 
 from src.utils import ingaas_processing
 from src.stitching import core
+from src.stitching import helpers
 import cv2
 import tifffile
 from scipy.ndimage import rotate
 import glob
 
 def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,FPS=50):
+    debug=False
     """
     Manually stitches a sequence of images from a .tiff file using calibration data.
     Parameters:
@@ -43,7 +45,7 @@ def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,FP
 
     #Undistort images
     print("Undistorting images")
-    imgUndistorted= ProcessInGaAs.undistort(images, K, P, DIM)
+    imgUndistorted= ingaas_processing.undistort(images, K, P, DIM)
     print("Images undistorted")
     #rotate images for stitching
     print("rotating images")
@@ -66,8 +68,79 @@ def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,FP
         print("shape after: ",np.shape(imagerot))
     print("Images rotated")
     #Image stitching
-    stitchImages.continuous(imagerot, K, P, DIM, source, speed, FPS)
+    
+    
+    if debug:
+        print("DEBUG: show rotateted image set")
+        for i in range(len(imagerot)):
+            cv2.imshow("Image", ingaas_processing.lin_stretch_img(imagerot[i], 1, 99.99))
+            cv2.waitKey(1)
+        cv2.destroyAllWindows()
+    PLimg=core.continuous(imagerot,speed,FPS,drift=drift)
     print("stitch done!")
+    #Save stitched image
+    save_path = source+"stitched_image_cont.png"
+    cv2.imwrite(save_path, ingaas_processing.lin_stretch_img(PLimg, 1, 99.99))
+    #tifffile.imwrite(save_path, PLimg)
+    return PLimg
+
+def separateModulated(source, output_dir=None, n=3):
+    """
+    EXPERIMENTAL:
+    Separate modulated images from a continuous scan into n sets.
+    
+    For FPS=n*f_modulated, images will be in sequence [1,2,...,n,1,2,...,n,...]. Function separates them
+    into n individual multitiff files, one for each modulation set.
+    
+    Parameters:
+    source (str): Path to the source .tiff file containing the modulated images.
+    output_dir (str, optional): Directory to save the output files. If None, saves in current directory.
+    n (int, optional): Number of modulation sets. Is the subdivision of the modulation light, 
+        (should be set properly when applying bias such that FPS=n*f_modulation). Default is 3.
+    
+    Returns:
+    tuple: Paths to the n output files
+    """
+    
+    # Load images from the source multitiff
+    print(f"Loading images from {source}")
+    images = tifffile.imread(source)
+    print(f"Loaded {len(images)} images. Shape: {images.shape}")
+    
+    # Create output directory if specified
+    if output_dir is None:
+        output_dir = os.getcwd()
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Separate images into n sets based on sequence [1,2,...,n,1,2,...,n,...]
+    sets = [[] for _ in range(n)]
+    
+    for i, img in enumerate(images):
+        modulation_index = i % n
+        sets[modulation_index].append(img)
+    
+    # Convert lists to numpy arrays
+    sets = [np.array(s) for s in sets]
+    
+    print(f"Separated images into {n} sets:")
+    for i, s in enumerate(sets):
+        print(f"  Set {i+1}: {len(s)} images, shape: {s.shape}")
+    
+    # Create output filenames and save
+    base_name = os.path.splitext(os.path.basename(source))[0]
+    output_paths = []
+    
+    print("Saving separated image sets...")
+    for i, s in enumerate(sets):
+        output_path = os.path.join(output_dir, f"{base_name}_set{i+1}.tiff")
+        tifffile.imwrite(output_path, s)
+        print(f"Set {i+1} saved to {output_path}")
+        output_paths.append(output_path)
+    
+    print("Separation complete!")
+    
+    return tuple(output_paths)
+
 def subtract(source1,source2,calpath,rotation=0,speed=4000,drift=0.0466,nsteps=100,FPS=50):
     """
     EXPERIMENTAL:
