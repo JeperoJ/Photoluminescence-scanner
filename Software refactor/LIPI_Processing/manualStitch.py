@@ -80,8 +80,8 @@ def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,FP
     print("stitch done!")
     #Save stitched image
     save_path = source+"stitched_image_cont.png"
-    cv2.imwrite(save_path, ingaas_processing.lin_stretch_img(PLimg, 1, 99.99))
-    #tifffile.imwrite(save_path, PLimg)
+    #cv2.imwrite(save_path, ingaas_processing.lin_stretch_img(PLimg, 1, 99.99))
+    tifffile.imwrite(save_path, PLimg)
     return PLimg
 
 def separateModulated(source, output_dir=None, n=3):
@@ -166,7 +166,7 @@ def subtract(source1,source2,calpath,rotation=0,speed=4000,drift=0.0466,nsteps=1
     imgUndistortedLow= ingaas_processing.undistort(imageslow, K, P, DIM)
     print("Images undistorted")
     # Concatenate images side by side
-    concatenated_image = np.concatenate([ProcessInGaAs.lin_stretch_img(imgUndistortedHigh[168], 40, 99.99), ProcessInGaAs.lin_stretch_img(imgUndistortedLow[168], 40, 99.99)], axis=1)
+    concatenated_image = np.concatenate([ingaas_processing.lin_stretch_img(imgUndistortedHigh[168], 40, 99.99), ingaas_processing.lin_stretch_img(imgUndistortedLow[168], 40, 99.99)], axis=1)
 
     # Display concatenated image
     cv2.imshow("Concatenated Image", concatenated_image)
