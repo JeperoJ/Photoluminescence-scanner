@@ -122,7 +122,7 @@ class LIPI_Scanner_App(ttk.Frame):
         self.gantry_dropdown.config(values=self.com_ports)
         self.camera_dropdown.config(values=camera_utils.list(self.camera_context))
 
-        if FliSdk_V2.IsStarted(self.camera_context) and str(self.gantry_button["state"]) == "disabled" and self.save_dir_text.get() != "" and str(self.scan_module_button["text"])=="Start\nScan":
+        if str(self.camera_button["state"]) == "disabled" and str(self.gantry_button["state"]) == "disabled" and self.save_dir_text.get() != "" and str(self.scan_module_button["text"])=="Start\nScan":
             self.scan_module_button.config(state="enabled")
 
         super().update()
