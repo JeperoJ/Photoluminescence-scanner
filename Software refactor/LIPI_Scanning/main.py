@@ -12,15 +12,19 @@ Preview while scanning / Camera Stream
 More settings available
 Exposure Adjustment (Requires starting and stopping the context i think. Wonder how fast this is?)
 """
-
+import sys
+import os
+fli_path = os.path.abspath(os.path.join(os.getenv('FLISDK_DIR'), "Python/lib"))
+if fli_path not in sys.path:
+    sys.path.append(fli_path)
+import FliSdk_V2
 
 from multiprocessing import context
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import font
-import sys
-import os
+
 import tomlkit
 import numpy as np
 from  PIL import ImageTk, Image
@@ -31,10 +35,7 @@ import datetime
 import serial
 import winsound
 
-fli_path = os.path.abspath(os.path.join(os.getenv('FLISDK_DIR'), "Python/lib"))
-if fli_path not in sys.path:
-    sys.path.append(fli_path)
-import FliSdk_V2
+
 
 class LIPI_Scanner_App(ttk.Frame):
     def __init__(self, parent):
