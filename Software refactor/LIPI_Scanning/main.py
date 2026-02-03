@@ -12,19 +12,17 @@ Preview while scanning / Camera Stream
 More settings available
 Exposure Adjustment (Requires starting and stopping the context i think. Wonder how fast this is?)
 """
+
 import sys
 import os
 fli_path = os.path.abspath(os.path.join(os.getenv('FLISDK_DIR'), "Python/lib"))
 if fli_path not in sys.path:
     sys.path.append(fli_path)
-import FliSdk_V2
 
-from multiprocessing import context
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import font
-
 import tomlkit
 import numpy as np
 from  PIL import ImageTk, Image
@@ -35,7 +33,7 @@ import datetime
 import serial
 import winsound
 
-
+import FliSdk_V2
 
 class LIPI_Scanner_App(ttk.Frame):
     def __init__(self, parent):
@@ -216,14 +214,13 @@ class LIPI_Scanner_App(ttk.Frame):
         self.popup("Camera Calibration", "Please put on the camera lens cap and press OK to continue.", dismiss=True)
         _popup = self.popup("Camera Calibration", "Calibrating camera. Please wait...")
         _popup.update()
-        camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
-        """ try:
+        #camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
+        try:
             camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
         except Exception as e:
             _popup.destroy()
             print(e)
             self.popup("Camera Calibration", "Calibration Failed. No idea why. Check terminal output and consider pulling the power.", dismiss=True, sound=True)
-            return """
         self.camera_button.config(text="Camera Ready", state="disabled")
         _popup.destroy()
         FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
@@ -289,8 +286,11 @@ class LIPI_Scanner_App(ttk.Frame):
         buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
         print(f"Buffer size images: {buffer_size_images}")
         FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)
-        print(f"Context buffer size: {FliSdk_V2.GetBufferSizeInImages(self.camera_context)}")
-        gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed,self.gantry_length)
+        print(f"Context buffer size: {FliSdk_V2.GetImagesCapacity(self.camera_context)}")
+        FliSdk_V2.Stop(self.camera_context)
+        FliSdk_V2.ResetBuffer(self.camera_context)
+        FliSdk_V2.Start(self.camera_context)
+        gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
         self.scan_module_button.config(text="Scanned")
         #self.scan_module_button.config(text="Reset\nGantry", state="enabled", command=self.reset)
         self.popup("Scanning", "Scan completed. Turn off lighbar.", dismiss=True, sound=True)
