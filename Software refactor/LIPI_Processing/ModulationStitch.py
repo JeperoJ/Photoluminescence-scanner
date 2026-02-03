@@ -13,12 +13,13 @@ import scipy
 #import toml_rs as tml
 import io
 import manualStitch
+import math
 
 separate=False
 mod_freq = 50
 FPS = 50
 print(f"mod_freq: {mod_freq}, FPS: {FPS}")
-n_images = 6  # Change this value to process different numbers of images
+n_images = 3  # Change this value to process different numbers of images
 impath_list = []
 if separate:
     im_path = filedialog.askopenfilename(title='Select images to process')
@@ -47,6 +48,11 @@ print(calpath)
 #rotation=180+88 #In degrees
 rotation=90
 speed=4000
+#Speed in different axes, given v^2=vx^2+vy^2 and v1/v2=px/py
+p1=2100
+p2=2000
+speedx=p1*speed/(math.sqrt(p1**2+p2**2))
+speedy=p2*speed/(math.sqrt(p1**2+p2**2))
 #drift=0.02448 #new drift factor (for the 100mm offset in set_position(end+100,end))
 #drift=0.0466 #old drift factor (without 100mm offset)
 drift=0.05622 #new new experimental drift factor
@@ -62,9 +68,9 @@ nsteps=3
 PLimg_list = []
 for path in impath_list:
     
-    PLimg = manualStitch.manualstitch(path,calpath,rotation,speed,drift,nsteps,FPS)
+    PLimg = manualStitch.manualstitch(path,calpath,rotation,speedx,drift,nsteps,FPS)
     PLimg_list.append(PLimg)
-modulated_img = PLimg_list[4]-PLimg_list[1]
+modulated_img = PLimg_list[2]-PLimg_list[0]
 cv2.imshow("testmodulation",ingaas_processing.lin_stretch_img(modulated_img, 1, 99.99))
 cv2.waitKey(0)
 cv2.destroyAllWindows()

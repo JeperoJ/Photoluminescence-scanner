@@ -289,7 +289,7 @@ class LIPI_Scanner_App(ttk.Frame):
         print(f"Buffer size images: {buffer_size_images}")
         FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)
         print(f"Context buffer size: {FliSdk_V2.GetBufferSizeInImages(self.camera_context)}")
-        gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
+        gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed,self.gantry_length)
         self.scan_module_button.config(text="Scanned")
         #self.scan_module_button.config(text="Reset\nGantry", state="enabled", command=self.reset)
         self.popup("Scanning", "Scan completed. Turn off lighbar.", dismiss=True, sound=True)
