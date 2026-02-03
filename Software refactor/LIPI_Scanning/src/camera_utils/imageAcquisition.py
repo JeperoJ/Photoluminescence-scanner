@@ -184,7 +184,7 @@ def acquireImage(context,bufferSize,framerate,nImages=4,savePath=0, fileName=0,d
     
     #FliSdk_V2.ImageProcessing.SetColorMap(context, -1, "RAINBOW")
 
-    #FliSdk_V2.Start(context)
+    FliSdk_V2.Start(context)
 
     #Enable auto clip after start
     #FliSdk_V2.ImageProcessing.EnableAutoClip(context, -1, True)

@@ -62,7 +62,7 @@ def calibrate(gcode_handler, timeout=None):
     gcode_handler.wait(timeout = timeout)
     print("Gantry homed!")
 
-def scan_continuous(gcode_handler,context,savePath,frameRate,speed=5000,gantry_lengthx=2100):
+def scan_continuous(gcode_handler,context,savePath,frameRate,speed=5000,gantry_lengthx=2100,gantry_lengthy=2000):
     """
     Perform a continuous scan of a PV panel using a gantry system and save the acquired images.
     Parameters:
@@ -79,15 +79,15 @@ def scan_continuous(gcode_handler,context,savePath,frameRate,speed=5000,gantry_l
     - The function waits for the gantry to complete its movement before finishing.
     - The scanned image is saved with a timestamp in the filename.
     """
-    offsetBegin=200 #offset from the first edge of the gantry to end stops. This is the 0-point in real life
+    offsetBegin=200 #offset from the first edge of the gantry to end stops. 
     px=gantry_lengthx-offsetBegin #Effective length of gantry in the X direction
-    py=2000 #Fixed length of gantry in the Y direction
+    py=gantry_lengthy #Fixed length of gantry in the Y direction
     speedx=px*speed/(math.sqrt(px**2+py**2)) #Calculate speed in the X direction
     speedy=py*speed/(math.sqrt(px**2+py**2)) #Calculate speed in the Y direction
     nImages=int(px/(speedx/60)*frameRate)
     bufferSize=nImages+200
     gcode_handler.set_speed(speed) #set speed for both axes
-    gcode_handler.set_position(200,0)
-    gcode_handler.set_position(gantry_length+100,gantry_length)
+    gcode_handler.set_position(offsetBegin,0) #Set offset (to see panel before the light bar)
+    gcode_handler.set_position(gantry_lengthx,gantry_lengthy)
     imageAcquisition.acquireImage(context,bufferSize,frameRate,nImages,savePath, fileName=f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
     gcode_handler.wait()
