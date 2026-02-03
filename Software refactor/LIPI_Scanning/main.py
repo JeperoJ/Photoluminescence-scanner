@@ -225,13 +225,13 @@ class LIPI_Scanner_App(ttk.Frame):
         _popup.destroy()
         FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
         FliSdk_V2.ImageProcessing.SetColorMap(self.camera_context, -1, "NONE") #TODO: Play around with color maps
-        FliSdk_V2.Start(self.camera_context)
+        #FliSdk_V2.Start(self.camera_context)
         #self.camera_display_loop()
-        threading.Thread(target=self.camera_display_loop, daemon=True)
+        #threading.Thread(target=self.camera_display_loop, daemon=True)
         #self.camera_preview_button.config(state="enabled")
         self.update()
 
-    def camera_display_loop(self):
+    """def camera_display_loop(self):
         while True:
             if FliSdk_V2.IsStarted():
                 image = FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1) #-1 to get the last image in the buffer
@@ -240,6 +240,7 @@ class LIPI_Scanner_App(ttk.Frame):
                 self.preview.image = photo
                 self.preview.configure(image=photo)
             time.sleep(1/self.fps)
+    """
 
     """ def show_image_loop(self, window, image_label):
         image = FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1) #-1 to get the last image in the buffer
@@ -283,13 +284,14 @@ class LIPI_Scanner_App(ttk.Frame):
                    dismiss=True, sound=True)
         self.scan_module_button.config(text="Scanning...", state="disabled")
         self.update()
-        buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
+        #buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
+        buffer_size_images=1000
         print(f"Buffer size images: {buffer_size_images}")
         FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)
         print(f"Context buffer size: {FliSdk_V2.GetImagesCapacity(self.camera_context)}")
-        FliSdk_V2.Stop(self.camera_context)
-        FliSdk_V2.ResetBuffer(self.camera_context)
-        FliSdk_V2.Start(self.camera_context)
+        # FliSdk_V2.Stop(self.camera_context)
+        # FliSdk_V2.ResetBuffer(self.camera_context)
+        # FliSdk_V2.Start(self.camera_context)
         gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
         self.scan_module_button.config(text="Scanned")
         #self.scan_module_button.config(text="Reset\nGantry", state="enabled", command=self.reset)

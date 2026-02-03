@@ -86,6 +86,7 @@ def scan_continuous(gcode_handler,context,savePath,frameRate,speed=5000,gantry_l
     speedy=py*speed/(math.sqrt(px**2+py**2)) #Calculate speed in the Y direction
     nImages=int(px/(speedx/60)*frameRate)
     bufferSize=nImages+200
+    bufferSize=1000
     gcode_handler.set_speed(speed) #set speed for both axes
     gcode_handler.set_position(offsetBegin,0) #Set offset (to see panel before the light bar)
     gcode_handler.set_position(gantry_lengthx,gantry_lengthy)
