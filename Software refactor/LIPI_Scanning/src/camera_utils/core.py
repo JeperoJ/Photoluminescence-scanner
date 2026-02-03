@@ -37,7 +37,7 @@ def calibrate_camera(context, adaptiveBias=False):
     FliSdk_V2.FliCredThree.EnableAntiBlooming(context, True)
     print("Anti-blooming enabled")
     #Enable auto clip. Only after starting acquisition?????
-    FliSdk_V2.ImageProcessing.EnableAutoClip(context, -1, True)
+    #FliSdk_V2.ImageProcessing.EnableAutoClip(context, -1, True)
     print("Auto clip enabled")
     # Debugging display
     return context

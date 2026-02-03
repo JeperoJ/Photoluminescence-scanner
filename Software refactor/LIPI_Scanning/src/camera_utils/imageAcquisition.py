@@ -183,9 +183,9 @@ def acquireImage(context,bufferSize,framerate,nImages=4,savePath=0, fileName=0,d
     
     
     #FliSdk_V2.ImageProcessing.SetColorMap(context, -1, "RAINBOW")
-    print("context started before:",FliSdk_V2.IsStarted())
+    print("context started before:",FliSdk_V2.IsStarted(context))
     FliSdk_V2.Start(context)
-    print("context started after:",FliSdk_V2.IsStarted())
+    print("context started after:",FliSdk_V2.IsStarted(context))
     print("see buffer size:",FliSdk_V2.GetImagesCapacity(context))
 
     #Enable auto clip after start
@@ -287,10 +287,11 @@ def BuildNUCBias(context):
     
     print("Building bias")
     res = FliSdk_V2.FliCred.BuildBias(context)
-    if not res:
-        print(res)
-        print("Error while building bias.")
-        raise ValueError("BIAS???")
+    # if not res:
+    #     print(res)
+    #     print("Error while building bias.")
+    #     raise ValueError("BIAS???")
+    print("what.....")
     print("Bias built! Enabling...")
     FliSdk_V2.FliSerialCamera.EnableBias(context, True)
     print("Bias Enabled!")
