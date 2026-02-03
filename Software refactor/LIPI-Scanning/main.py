@@ -38,8 +38,8 @@ class LIPI_Scanner_App(ttk.Frame):
             self = self
             #with open("LIPI-Scanning/data/config/default.toml", "r") as f:
             #    self.config = tomlkit.load(f)
-            self.fps = 50
-            self.tint = 2
+            self.fps = 300
+            self.tint = 0.5
             self.gain = "Medium"
             self.gantry_speed = 5000 #mm/min
             #self.fps = self.config["camera"]["fps"]
@@ -188,7 +188,7 @@ class LIPI_Scanner_App(ttk.Frame):
         camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
         self.camera_button.config(text="Camera Ready", state="disabled")
         _popup.destroy()
-        FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
+        #FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
         FliSdk_V2.ImageProcessing.SetColorMap(self.camera_context, -1, "NONE") #TODO: Play around with color maps
         FliSdk_V2.Start(self.camera_context)
         #self.camera_display_loop()
