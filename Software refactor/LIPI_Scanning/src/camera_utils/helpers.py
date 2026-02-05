@@ -70,13 +70,19 @@ def BuildNUCBias(context):
     print("[DEBUGGING] State before correction: (should be false)")
     print(state)
     
+    # Start the camera acquisition - bias building requires the camera to be running
+    print("Starting camera acquisition for bias building...")
+    FliSdk_V2.Start(context)
+    
     print("Building bias")
     res = FliSdk_V2.FliCred.BuildBias(context)
     if not res:
         print(res)
         print("Error while building bias.")
+        FliSdk_V2.Stop(context)
         raise ValueError("BIAS???")
     print("Bias built! Enabling...")
+    FliSdk_V2.Stop(context)
     FliSdk_V2.FliSerialCamera.EnableBias(context, True)
     print("Bias Enabled!")
     print("[DEBUGGING]getting new bias state (should be true")

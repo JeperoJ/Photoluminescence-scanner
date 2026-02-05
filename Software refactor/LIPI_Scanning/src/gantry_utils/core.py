@@ -84,11 +84,12 @@ def scan_continuous(gcode_handler,context,savePath,frameRate,speed=5000,gantry_l
     py=gantry_lengthy #Fixed length of gantry in the Y direction
     speedx=px*speed/(math.sqrt(px**2+py**2)) #Calculate speed in the X direction
     speedy=py*speed/(math.sqrt(px**2+py**2)) #Calculate speed in the Y direction
+    speedtest=speed/(math.sqrt(2))
     nImages=int(px/(speedx/60)*frameRate)
     bufferSize=nImages+200
     bufferSize=1000
-    gcode_handler.set_speed(speed) #set speed for both axes
+    gcode_handler.set_speed(speedtest) #set speed for both axes
     gcode_handler.set_position(offsetBegin,0) #Set offset (to see panel before the light bar)
-    gcode_handler.set_position(gantry_lengthx,gantry_lengthy)
+    gcode_handler.set_position(gantry_lengthx,gantry_lengthx-offsetBegin)
     imageAcquisition.acquireImage(context,bufferSize,frameRate,nImages,savePath, fileName=f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
     gcode_handler.wait()

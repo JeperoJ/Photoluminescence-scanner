@@ -1,10 +1,12 @@
 import os
-from ...src import camera_utils, gantry_utils
-from ...src.camera_utils.FLI_API import FliSdk_V2
+from .. import camera_utils, gantry_utils
+import FliSdk_V2
+import math
+import datetime
 
 __all__ = ["continuous"]
 
-def continuous(gcode_handler,context,savePath,frameRate,speed=5000):
+def continuous(gcode_handler,context,savePath,frameRate,speed=5000,gantry_lengthx=2100,gantry_lengthy=2000):
     """
     Perform a continuous scan of a PV panel using a gantry system and save the acquired images.
     Parameters:
@@ -21,18 +23,21 @@ def continuous(gcode_handler,context,savePath,frameRate,speed=5000):
     - The function waits for the gantry to complete its movement before finishing.
     - The scanned image is saved with a timestamp in the filename.
     """
-    #offsetBegin=500 #offset from the first edge of the gantry to end stops. This is the 0-point in real life
-    #offsetEnd=100 #offset from the last edge of the gantry to max travel of the axes
-    dist_travel=2000#(2500-offsetBegin-offsetEnd) #Distance with offset included
-    nImages=int(dist_travel/(speed/60)*frameRate)
-    #bufferSize=nImages+400
-    gcode_handler.set_speed([speed,speed]) #set speed for both axes
-    FliSdk_V2.Stop(context)
-    print(FliSdk_V2.GetBufferFilling(context), FliSdk_V2.GetImage)
-    FliSdk_V2.ResetBuffer(context)
-
-    gcode_handler.set_position(200,0)
-    gcode_handler.set_position(dist_travel+100,dist_travel)
-    #imageAcquisition.acquireImage(context,bufferSize,frameRate,nImages,savePath, fileName="scan")
+    offsetBegin=200 #offset from the first edge of the gantry to end stops.
+    px=gantry_lengthx-offsetBegin #Effective length of gantry in the X direction
+    py=gantry_lengthy #Fixed length of gantry in the Y direction
+    speedx=px*speed/(math.sqrt(px**2+py**2)) #Calculate speed in the X direction
+    speedy=py*speed/(math.sqrt(px**2+py**2)) #Calculate speed in the Y direction
+    speedtest=speed/(math.sqrt(2))
+    nImages=int(px/(speedx/60)*frameRate)
+    bufferSize=nImages+200
+    bufferSize=1000
+    gcode_handler.set_speed(speedtest) #set speed for both axes
+    gcode_handler.set_position(offsetBegin,0) #Set offset (to see panel before the light bar)
+    gcode_handler.set_position(gantry_lengthx,gantry_lengthx-offsetBegin)
+    image_start = FliSdk_V2.GetBufferFilling(context)
     gcode_handler.wait()
-    return None
+    image_end = FliSdk_V2.GetBufferFilling(context)
+    fileName=f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.raw"
+    file_path=os.path.join(savePath,fileName)
+    FliSdk_V2.SaveBuffer(context,file_path,image_start,image_end)
