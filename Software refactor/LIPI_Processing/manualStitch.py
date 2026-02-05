@@ -79,9 +79,12 @@ def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,FP
     PLimg=core.continuous(imagerot,speed,FPS,drift=drift)
     print("stitch done!")
     #Save stitched image
-    save_path = source+"stitched_image_cont.png"
-    #cv2.imwrite(save_path, ingaas_processing.lin_stretch_img(PLimg, 1, 99.99))
-    tifffile.imwrite(save_path, PLimg)
+    save_path = source+"stitched_image_cont"
+    ### Save as PNG with linstretch for visibility
+    #cv2.imwrite((save_path+".png"), ingaas_processing.lin_stretch_img(PLimg, 1, 99.99))
+    ### Save as tiff without linstretch for further processing
+    tifffile.imwrite((save_path+".tiff"), PLimg)
+
     return PLimg
 
 def separateModulated(source, output_dir=None, n=3):

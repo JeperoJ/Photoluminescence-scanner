@@ -215,7 +215,7 @@ def continuous(images, speed, fps, cam_height=945, f=6, drift=0.02448, show_appe
     im = images[0]
     #peakIdx = helpers.peak_intensity(im, axis=0)  #Find peak intensity for PL detection - just to start the scan off. Could probably be hardcoded for robustness
     #print("peakIdx: ", peakIdx) #DEBUG
-    peakIdx = 194
+    peakIdx = 190  #Hardcoded peak index for robustness
     shape=(np.shape(im)[0],len(images))
     #given the speed, we know the distance between subsequent images. Interpolating line placement in each image
     PLimg = np.zeros(shape, dtype=np.int16)
