@@ -37,8 +37,15 @@ def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,FP
     K,P,DIM= ingaas_processing.loadCal(calpath, width, height)
     
     # Read images
-    print("Processing a .tiff file") #TODO: Implement tiff loading
-    images = tifffile.imread(source)
+    #TODO: implement file types .tiff and .raw with ProcessInGaAs
+    if source.endswith('.raw'):
+        print("Processing a .raw file")
+        images = ingaas_processing.load_raw_image(source, width, height)
+    elif source.endswith('.tiff'):
+        print("Processing a .tiff file") 
+        images = tifffile.imread(source)
+    else:
+        raise ValueError("Unsupported file format. Please provide a .tiff or .raw file.")
     #images=ProcessInGaAs.int16_2_uint16(images)
     print("Images loaded. Number of images: ",len(images))
     print("shape original: ",np.shape(images))
@@ -107,7 +114,13 @@ def separateModulated(source, output_dir=None, n=3):
     
     # Load images from the source multitiff
     print(f"Loading images from {source}")
-    images = tifffile.imread(source)
+    if source.endswith('.tiff'):
+        images = tifffile.imread(source)
+    elif source.endswith('.raw'):
+        width, height = 640, 512  # Example dimensions, adjust as necessary
+        images = ingaas_processing.load_raw_image(source, width, height)
+    else:
+        raise ValueError("Unsupported file format. Please provide a .tiff or .raw file.")
     print(f"Loaded {len(images)} images. Shape: {images.shape}")
     
     # Create output directory if specified

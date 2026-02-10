@@ -15,16 +15,19 @@ import io
 import manualStitch
 import math
 
-separate=False
+separate=True
 mod_freq = 50
-FPS = 50
+FPS = 300
 print(f"mod_freq: {mod_freq}, FPS: {FPS}")
-n_images = 6  # Change this value to process different numbers of images
+n_images = FPS / mod_freq  # Change this value to process different numbers of images
+if n_images != int(n_images):
+    raise ValueError(f"FPS must be an integer multiple of mod_freq. Current n_images: {n_images}")
+n_images = int(n_images)
 impath_list = []
 if separate:
     im_path = filedialog.askopenfilename(title='Select images to process')
     out_path = filedialog.askdirectory(title='Select output image path')
-    images = np.array(tifffile.imread(im_path))
+    #images = np.array(tifffile.imread(im_path))
 
     impath_list = manualStitch.separateModulated(im_path, out_path, n=n_images)
 else:
@@ -92,7 +95,7 @@ for path in impath_list:
 # cv2.imshow("testmodulation",ingaas_processing.lin_stretch_img(modulated_img, 1, 99.99))
 # cv2.waitKey(0)
 
-modulated_img = PLimg_list[3]-PLimg_list[1]
+modulated_img = PLimg_list[2]-PLimg_list[4]
 cv2.imshow("testmodulation",ingaas_processing.lin_stretch_img(modulated_img, 1, 99.99))
 cv2.waitKey(0)
 cropped_modulated_img = ingaas_processing.crop_image(modulated_img)
