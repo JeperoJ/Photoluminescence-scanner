@@ -61,7 +61,6 @@ class LIPI_Scanner_App(ttk.Frame):
             self.camera_context = FliSdk_V2.Init()
             self.gantry_handler = None
 
-
             #print(FliSdk_V2.ImageProcessing.GetColorMapList(self.camera_context, -1))
 
             #UI Appearance

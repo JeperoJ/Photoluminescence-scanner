@@ -1,6 +1,8 @@
+import os
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+import tifffile
 from src.utils import ingaas_processing
 
 
@@ -88,3 +90,66 @@ def display_and_save_video(image, bounding_box, output_file):
             break
     out.release()
     cv2.destroyAllWindows()
+
+def separateModulated(source, output_dir=None, n=3):
+    """
+    EXPERIMENTAL:
+    Separate modulated images from a continuous scan into n sets.
+    
+    For FPS=n*f_modulated, images will be in sequence [1,2,...,n,1,2,...,n,...]. Function separates them
+    into n individual multitiff files, one for each modulation set.
+    
+    Parameters:
+    source (str): Path to the source .tiff file containing the modulated images.
+    output_dir (str, optional): Directory to save the output files. If None, saves in current directory.
+    n (int, optional): Number of modulation sets. Is the subdivision of the modulation light, 
+        (should be set properly when applying bias such that FPS=n*f_modulation). Default is 3.
+    
+    Returns:
+    tuple: Paths to the n output files
+    """
+    
+    # Load images from the source multitiff
+    print(f"Loading images from {source}")
+    if source.endswith('.tiff'):
+        images = tifffile.imread(source)
+    elif source.endswith('.raw'):
+        width, height = 640, 512  # Example dimensions, adjust as necessary
+        images = ingaas_processing.load_raw_image(source, width, height)
+    else:
+        raise ValueError("Unsupported file format. Please provide a .tiff or .raw file.")
+    print(f"Loaded {len(images)} images. Shape: {images.shape}")
+    
+    # Create output directory if specified
+    if output_dir is None:
+        output_dir = os.getcwd()
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Separate images into n sets based on sequence [1,2,...,n,1,2,...,n,...]
+    sets = [[] for _ in range(n)]
+    
+    for i, img in enumerate(images):
+        modulation_index = i % n
+        sets[modulation_index].append(img)
+    
+    # Convert lists to numpy arrays
+    sets = [np.array(s) for s in sets]
+    
+    print(f"Separated images into {n} sets:")
+    for i, s in enumerate(sets):
+        print(f"  Set {i+1}: {len(s)} images, shape: {s.shape}")
+    
+    # Create output filenames and save
+    base_name = os.path.splitext(os.path.basename(source))[0]
+    output_paths = []
+    
+    print("Saving separated image sets...")
+    for i, s in enumerate(sets):
+        output_path = os.path.join(output_dir, f"{base_name}_set{i+1}.tiff")
+        tifffile.imwrite(output_path, s)
+        print(f"Set {i+1} saved to {output_path}")
+        output_paths.append(output_path)
+    
+    print("Separation complete!")
+    
+    return tuple(output_paths)

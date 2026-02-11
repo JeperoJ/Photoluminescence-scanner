@@ -17,9 +17,9 @@ import math
 
 separate=True
 mod_freq = 50
-FPS = 300
-print(f"mod_freq: {mod_freq}, FPS: {FPS}")
-n_images = FPS / mod_freq  # Change this value to process different numbers of images
+cameraFPS = 150
+print(f"mod_freq: {mod_freq}, FPS: {cameraFPS}")
+n_images = cameraFPS / mod_freq  # Change this value to process different numbers of images
 if n_images != int(n_images):
     raise ValueError(f"FPS must be an integer multiple of mod_freq. Current n_images: {n_images}")
 n_images = int(n_images)
@@ -57,7 +57,7 @@ p1=2100-offset
 p2=2000
 speedx=p1*speed/(math.sqrt(p1**2+p2**2))
 speedy=p2*speed/(math.sqrt(p1**2+p2**2))
-speedx=4000
+speedx=4000 #for testing
 
 
 #drift=0.02448 #new drift factor (for the 100mm offset in set_position(end+100,end))
@@ -75,7 +75,7 @@ drift=0.05622 #new new experimental drift factor
 PLimg_list = []
 for path in impath_list:
     
-    PLimg = manualStitch.manualstitch(path,calpath,rotation,speedx,drift,FPS)
+    PLimg = manualStitch.manualstitch(path,calpath,rotation,speedx,drift,fps=50)
     PLimg_list.append(PLimg)
 # modulated_img = PLimg_list[2]-PLimg_list[0][:,:-1]
 # cv2.imshow("testmodulation",ingaas_processing.lin_stretch_img(modulated_img, 1, 99.99))
@@ -95,7 +95,7 @@ for path in impath_list:
 # cv2.imshow("testmodulation",ingaas_processing.lin_stretch_img(modulated_img, 1, 99.99))
 # cv2.waitKey(0)
 
-modulated_img = PLimg_list[2]-PLimg_list[4]
+modulated_img = PLimg_list[1]-PLimg_list[3]
 cv2.imshow("testmodulation",ingaas_processing.lin_stretch_img(modulated_img, 1, 99.99))
 cv2.waitKey(0)
 cropped_modulated_img = ingaas_processing.crop_image(modulated_img)

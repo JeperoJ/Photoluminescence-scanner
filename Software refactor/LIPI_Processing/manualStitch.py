@@ -1,3 +1,9 @@
+"""
+Created on Dec 12 2024
+@author: Carl Emil Elling
+This module contains functions for manually stitching a continuous PL scan. 
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -10,7 +16,7 @@ import tifffile
 from scipy.ndimage import rotate
 import glob
 
-def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,FPS=50):
+def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,fps=50):
     debug=False
     """
     Manually stitches a sequence of images from a .tiff file using calibration data.
@@ -83,16 +89,17 @@ def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,FP
             cv2.imshow("Image", ingaas_processing.lin_stretch_img(imagerot[i], 1, 99.99))
             cv2.waitKey(1)
         cv2.destroyAllWindows()
-    PLimg=core.continuous(imagerot,speed,FPS,drift=drift)
+    PLimg=core.continuous(images=imagerot,speed=speed,fps=fps,drift=drift)
     print("stitch done!")
     #Save stitched image
     save_path = source+"stitched_image_cont"
     ### Save as PNG with linstretch for visibility
     #cv2.imwrite((save_path+".png"), ingaas_processing.lin_stretch_img(PLimg, 1, 99.99))
     ### Save as tiff without linstretch for further processing
-    tifffile.imwrite((save_path+".tiff"), PLimg)
+    save_path = save_path+".tiff"
+    tifffile.imwrite(save_path, PLimg)
 
-    return PLimg
+    return PLimg, save_path
 
 def separateModulated(source, output_dir=None, n=3):
     """

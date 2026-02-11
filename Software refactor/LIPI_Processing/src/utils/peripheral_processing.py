@@ -4,9 +4,8 @@ from tkinter import filedialog
 import matplotlib.pyplot as plt
 import cv2
 import tifffile
+from . import ingaas_processing
 
-import manualStitch
-import src.utils.ingaas_processing as ingaas_processing
 
 def plot_intensity_line(image_paths, column_n):
     """
@@ -17,17 +16,18 @@ def plot_intensity_line(image_paths, column_n):
         image_paths: List of paths to TIFF image files
         column_n: Column index for the horizontal line
     """
-    num_cols = max(3, (len(image_paths) + 2) // 3)
-    fig, axes = plt.subplots(3, num_cols, figsize=(14, 5 * 3))
+    num_cols = ((len(image_paths) + 2) // 3)+1
+    fig, axes = plt.subplots(3, num_cols, figsize=(5 * num_cols, 15))
     
     if len(image_paths) == 1:
         axes = axes.reshape(1, -1)
     
     for idx, image_path in enumerate(image_paths):
         # Load the image
-        image = Image.open(image_path)
-        image_array = np.array(image)
-        
+        #image = Image.open(image_path)
+        #image_array = np.array(image)
+        image_array = tifffile.imread(image_path)
+
         # Handle both grayscale and color images
         if len(image_array.shape) == 3:
             intensity = np.mean(image_array, axis=2)
@@ -38,15 +38,16 @@ def plot_intensity_line(image_paths, column_n):
         line_intensity = intensity[:, column_n]
         
         # Display the image with the line marked
-        axes[idx % 3, idx // 3].imshow(intensity, cmap='gray')
+        axes[idx % 3, idx // 3].imshow(ingaas_processing.lin_stretch_img(intensity, 1, 99.99), cmap='gray')
         axes[idx % 3, idx // 3].axvline(x=column_n, color='red', linewidth=2, label=f'Column {column_n}')
         axes[idx % 3, idx // 3].set_title(f'Image {idx + 1} with Line at Column {column_n}')
         axes[idx % 3, idx // 3].legend()
     
     # Plot all intensities on the same graph
     for idx, image_path in enumerate(image_paths):
-        image = Image.open(image_path)
-        image_array = np.array(image)
+        #image = Image.open(image_path)
+        #image_array = np.array(image)
+        image_array = tifffile.imread(image_path)
         
         if len(image_array.shape) == 3:
             intensity = np.mean(image_array, axis=2)
@@ -54,13 +55,13 @@ def plot_intensity_line(image_paths, column_n):
             intensity = image_array
         
         line_intensity = intensity[:, column_n]
-        axes[1, 2].plot(line_intensity, label=f'Image {idx + 1}')
+        axes[1, -1].plot(line_intensity, label=f'Image {idx + 1}')
     
-    axes[1, 2].set_title(f'Light Intensity Along Column {column_n}')
-    axes[1, 2].set_xlabel('Row')
-    axes[1, 2].set_ylabel('Intensity')
-    axes[1, 2].grid(True, alpha=0.3)
-    axes[1, 2].legend()
+    axes[1, -1].set_title(f'Light Intensity Along Column {column_n}')
+    axes[1, -1].set_xlabel('Row')
+    axes[1, -1].set_ylabel('Intensity')
+    axes[1, -1].grid(True, alpha=0.3)
+    axes[1, -1].legend()
     
     plt.tight_layout()
     plt.show()
@@ -90,7 +91,7 @@ def show_undistorted_frame(frameno,image_path, calibration_path):
 if __name__ == "__main__":
     #show intensity line plot for multiple images (helper for choosing images for modulation stitch):
     image_paths = []
-    for i in range(6):
+    for i in range(3):
         path = filedialog.askopenfilename(title=f"Select TIFF Image {i + 1}", filetypes=[("TIFF files", "*.tif;*.tiff")])
         if path:
             image_paths.append(path)
