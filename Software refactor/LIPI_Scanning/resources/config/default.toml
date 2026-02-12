@@ -1,9 +1,25 @@
 title = "Default Config"
 
+[general]
+dpf = 0.33 #[None]-TODO: Desired distance per frame in pixels. Probably best if this was reversed to frames per pixel. Lower means slower scan.
+
+[lightbar]
+intensity = 1 #[None]-TODO. Needs to be determined a good way to control and write it down. Possibly the current used, or ratio of current to lightbar compared to max.
+modulation = true #[Bool]-If lightbar signal is being modulated or not. Until control of power supply setup, it should just match what is done manually.
+freq = 0 #[Hz]-Full cycle frequency for modulation. Integer larger than 0. Is fps_eff if modulating. Ignored otherwise.
+duty_cycle = 60 #[%]-Duty Cycle active percentage. Integer from 1 to 99. Currently not used. Ignored if not modulating.
+waveform = "Square" #[None]-Waveform used for modulation. Currently not used. Ignored if not modulating.
+
 [gantry]
-speed = 5000
+speed = 5000 #[mm/min]-TODO: Should be configured based on fps_eff and dpf
+length_x = 2100 #[mm]-Length of scan/upper axis TODO:Better notation
+length_y = 2000 #[mm]-Length of lightbar/lower axis TODO:Better notation
+offset = 200 #[mm]-Offset between upper and lower bar when doing the scan TODO:Better notation
+cam_height = 1000 #[mm]-Height of camera above ground/module. TODO:Improve this description
+
 
 [camera]
-fps = 50
-tint = 2
-gain = "medium"
+fps = 50 #[Hz]-Framerate to capture at. Is both fps_cam and fps_eff when not modulating. Ignored if modulating.
+fps_ratio = 6#[None]-Ratio between modulation frequency and fps_cam, must be integer larger than 2. Overrides fps if modulating, and determines it as fps_cam=fps_ratio*modulationg_freq
+exposure = 2 #[ms]-Exposure time must be less than 1000/fps_cam
+gain = "Medium" #[None]-Gain can be either "Low", "Medium", or "High"

@@ -35,15 +35,29 @@ import winsound
 
 import FliSdk_V2
 
+
+def threaded(fn):
+    def run(*k, **kw):
+        t = threading.Thread(target=fn, args=k, kwargs=kw, daemon=True)
+        t.start()
+        return t
+    return run
+
 class LIPI_Scanner_App(ttk.Frame):
     def __init__(self, parent):
             #Initializing Application Variables
             super().__init__(parent)
-            #with open("LIPI-Scanning/data/config/default.toml", "r") as f:
-            #    self.config = tomlkit.load(f)
-            self.fps = 300
-            self.tint = 1#ms
-            self.gain = "Medium"
+            with open("resources/config/default.toml", "r") as f:
+                self.config = tomlkit.load(f)
+
+            print(self.config)
+
+            self.camera_config = {
+                "fps": 300,
+                "tint": 1,  # ms
+                "gain": "Medium"
+            }
+
             self.gantry_speed = 5000 #mm/min
             self.f_mod=50 #Hz
             self.is_modulating=True
@@ -57,16 +71,19 @@ class LIPI_Scanner_App(ttk.Frame):
             #TODO: If modulation do dpf using f_mod
             #TODO: Maybe define speed of gantry using known geometry (dpf=1)
             #TODO: Experiment with making axis move same speed (same distance to move)
+            #For axis moving same speed: Both axis should move l=min(l_y, l_x-offset). Command becomes pos(l+offset, l)
 
             self.camera_context = FliSdk_V2.Init()
             self.gantry_handler = None
 
+            self.preview_image = None
+
             #print(FliSdk_V2.ImageProcessing.GetColorMapList(self.camera_context, -1))
 
             #UI Appearance
-
             #parent.attributes('-fullscreen', True)
             parent.protocol("WM_DELETE_WINDOW", quit)
+            parent.title("LIPI Scanner")
             s = ttk.Style()
             s.configure('.', font=('Helvetica', 60))
 
@@ -124,6 +141,10 @@ class LIPI_Scanner_App(ttk.Frame):
             self.preview_frm.grid(row=0, column=2, rowspan=4, columnspan=2, sticky="nsew", padx=padding, pady=padding)
             self.scan_module_button.grid(row=4, column=2, sticky="nsew", padx=padding, pady=padding)
             self.quit_button.grid(row=4, column=3, sticky="nsew", padx=padding, pady=padding)
+
+    def temp(self):
+        window = tk.Toplevel(self)
+        window.attributes('-fullscreen', True)
 
     def update(self):
         self.com_ports = gantry_utils.get_ports()
@@ -209,7 +230,7 @@ class LIPI_Scanner_App(ttk.Frame):
         except Exception as e:
             _popup.destroy()
             print(e)
-            self.popup("Camera Connection", "Connection Failed. Check that the camera is connected and powered, or try a different camera_utils.", dismiss=True)
+            self.popup("Camera Connection", "Connection Failed. Check that the camera is connected and powered, or try a different option.", dismiss=True)
             return
         self.camera_button.config(text="Calibrate", command=self.calibrate_camera)
         self.camera_dropdown.config(state="disabled")
@@ -231,11 +252,34 @@ class LIPI_Scanner_App(ttk.Frame):
         #FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
         FliSdk_V2.ImageProcessing.SetColorMap(self.camera_context, -1, "NONE") #TODO: Play around with color maps
         FliSdk_V2.Start(self.camera_context)
-        #self.camera_display_loop()
-        t = threading.Thread(target=self.camera_display_loop, daemon=True)
-        t.start()
+        self.camera_display_loop()
+        #t = threading.Thread(target=self.camera_display_loop, daemon=True)
+        #t.start()
         #self.camera_preview_button.config(state="enabled")
         self.update()
+
+    #@threaded
+    @threaded
+    def process_preview(self):
+        #Threaded processing script so it does not block the main(ui) thread. Uses time to not do this constantly. Might be better way.
+        #TODO: Add stretching of the image irt. contrast. Should not be a problem now it is in a separate thread.
+        timestamp = time.perf_counter_ns()
+        while True:
+            if FliSdk_V2.IsStarted(self.camera_context) and (time.perf_counter_ns() - timestamp > 10 ** 9 / self.fps): #Only run if enough time elapsed and the SDK is capturing.
+                image = np.array(FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1))  # -1 to get the last image in the buffer. np.array wrap to make sure it is newest version (Dont know if needed just have experienced issues before)
+                #Any image processing goes here. Into new object, and pass that into the fromarray
+                photo = ImageTk.PhotoImage(image=Image.fromarray(image)) #Take array, into PIL image, into image usable in tk. Have no idea if this can be improved
+                self.preview_image = photo #Sets class variable, so it can be fetched by display_preview
+                timestamp = time.perf_counter_ns()
+            else:
+                time.sleep(1E-2)
+
+    def display_preview(self):
+        image = self.preview_image #Capture current stored image, so if it changes during it should not impact this function.
+        self.preview.image = image #Sets it in the label the first time
+        self.preview.configure(image=image) #Sets it in the label the second time. Need both lines else weird stuff happens. No clue why but I have accepted it.
+        self.after(20, self.display_preview) #Run this at 50 hz ish, minus processing time or any blocking of the main thread.
+
 
     def camera_display_loop(self):
         #print(FliSdk_V2.IsStarted(self.camera_context))
@@ -272,8 +316,8 @@ class LIPI_Scanner_App(ttk.Frame):
         #FliSdk_V2.SetBufferSize(self.camera_context, buffer_size_images)
         print(f"Context buffer size: {FliSdk_V2.GetImagesCapacity(self.camera_context)}")
         #gantry_utils.scan_continuous(self.gantry_handler,self.camera_context,self.save_dir_text.get(),self.fps,self.gantry_speed)
-        self.scan_thread = threading.Thread(target=self.scan_thread, daemon=True)
-        self.scan_thread.start()
+        t = threading.Thread(target=self.scan_thread, daemon=True)
+        t.start()
 
     def scan_thread(self):
         linescan.continuous(self.gantry_handler, self.camera_context, self.save_dir_text.get(), self.fps,
