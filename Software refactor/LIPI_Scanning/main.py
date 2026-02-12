@@ -23,7 +23,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import font
-import tomlkit
+import tomlkit as tmlk
 import numpy as np
 from  PIL import ImageTk, Image
 from src import gantry_utils, camera_utils, linescan
@@ -48,15 +48,18 @@ class LIPI_Scanner_App(ttk.Frame):
             #Initializing Application Variables
             super().__init__(parent)
             with open("resources/config/default.toml", "r") as f:
-                self.config = tomlkit.load(f)
+                self.config = tmlk.load(f)
+            for key in self.config:
+                print(key)
+                for item in self.config[key]:
+                    print(item)
 
-            print(self.config)
 
-            self.camera_config = {
-                "fps": 300,
-                "tint": 1,  # ms
-                "gain": "Medium"
-            }
+
+            self.fps = 300
+            self.tint = 1
+            self.gain = "Medium"
+
 
             self.gantry_speed = 5000 #mm/min
             self.f_mod=50 #Hz
@@ -72,6 +75,9 @@ class LIPI_Scanner_App(ttk.Frame):
             #TODO: Maybe define speed of gantry using known geometry (dpf=1)
             #TODO: Experiment with making axis move same speed (same distance to move)
             #For axis moving same speed: Both axis should move l=min(l_y, l_x-offset). Command becomes pos(l+offset, l)
+            #Thought: At high enough fps, one could modulate to different pumping powers
+            #TODO: Seperate UI into more classes. Figure out some proper MVC division. Maybe switch UI package. This file is getting bad.
+
 
             self.camera_context = FliSdk_V2.Init()
             self.gantry_handler = None
@@ -109,7 +115,7 @@ class LIPI_Scanner_App(ttk.Frame):
             ttk.Entry(self.save_dir_frm, textvariable=self.save_dir_text, font=("Helvetica", 18)).grid(row=0, column=0, sticky="nsew")
             ttk.Button(self.save_dir_frm, text="  Select\nDirectory", command=self.select_directory).grid(row=1, column=0, sticky="nsew")
 
-            self.button_config = ttk.Button(self, text="Config\n(TBD)", state="disabled") #TODO: Implement Config Window
+            self.button_config = ttk.Button(self, text="Config\n(TBD)", command=self.temp) #TODO: Implement Config Window
 
             self.preview_frm = ttk.Frame(self)
             self.preview = ttk.Label(self.preview_frm)
@@ -144,7 +150,22 @@ class LIPI_Scanner_App(ttk.Frame):
 
     def temp(self):
         window = tk.Toplevel(self)
-        window.attributes('-fullscreen', True)
+        #window.attributes('-fullscreen', True)
+        row_weights = [1]
+        col_weights = [1, 1]
+        for i, weight in enumerate(row_weights):
+            tk.Grid.rowconfigure(window, i, weight=weight)
+        for i, weight in enumerate(col_weights):
+            tk.Grid.columnconfigure(window, i, weight=weight)
+
+        config_options_frame = tk.Frame(window)
+        config_options_frame.grid(row=0, column=0, sticky="nsew")
+
+        config_extra_frame = ttk.Frame(window)
+        config_extra_frame.grid(row=0, column=1, sticky="nsew")
+
+
+
 
     def update(self):
         self.com_ports = gantry_utils.get_ports()
@@ -252,10 +273,8 @@ class LIPI_Scanner_App(ttk.Frame):
         #FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
         FliSdk_V2.ImageProcessing.SetColorMap(self.camera_context, -1, "NONE") #TODO: Play around with color maps
         FliSdk_V2.Start(self.camera_context)
-        self.camera_display_loop()
-        #t = threading.Thread(target=self.camera_display_loop, daemon=True)
-        #t.start()
-        #self.camera_preview_button.config(state="enabled")
+        self.process_preview()
+        self.display_preview(self.preview)
         self.update()
 
     #@threaded
@@ -274,23 +293,22 @@ class LIPI_Scanner_App(ttk.Frame):
             else:
                 time.sleep(1E-2)
 
-    def display_preview(self):
+    def display_preview(self, label):
         image = self.preview_image #Capture current stored image, so if it changes during it should not impact this function.
-        self.preview.image = image #Sets it in the label the first time
-        self.preview.configure(image=image) #Sets it in the label the second time. Need both lines else weird stuff happens. No clue why but I have accepted it.
-        self.after(20, self.display_preview) #Run this at 50 hz ish, minus processing time or any blocking of the main thread.
+        label.image = image #Sets it in the label the first time
+        label.configure(image=image) #Sets it in the label the second time. Need both lines else weird stuff happens. No clue why but I have accepted it.
+        self.after(20, self.display_preview, label) #Run this at 50 hz ish, minus processing time or any blocking of the main thread.
 
-
-    def camera_display_loop(self):
-        #print(FliSdk_V2.IsStarted(self.camera_context))
-        if FliSdk_V2.IsStarted(self.camera_context):
-            image = np.array(FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1)) #-1 to get the last image in the buffer
-            img = Image.fromarray(image, mode="RGBA")
-            photo = ImageTk.PhotoImage(image=img)
-            self.preview.image = photo
-            self.preview.configure(image=photo)
-            self.preview.update()
-        self.after(20, self.camera_display_loop)
+    # def camera_display_loop(self):
+    #     #print(FliSdk_V2.IsStarted(self.camera_context))
+    #     if FliSdk_V2.IsStarted(self.camera_context):
+    #         image = np.array(FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1)) #-1 to get the last image in the buffer
+    #         img = Image.fromarray(image, mode="RGBA")
+    #         photo = ImageTk.PhotoImage(image=img)
+    #         self.preview.image = photo
+    #         self.preview.configure(image=photo)
+    #         self.preview.update()
+    #     self.after(20, self.camera_display_loop)
 
     def select_directory(self):
         dir_path = filedialog.askdirectory()

@@ -1,5 +1,3 @@
-title = "Default Config"
-
 [general]
 dpf = 0.33 #[None]-TODO: Desired distance per frame in pixels. Probably best if this was reversed to frames per pixel. Lower means slower scan.
 
@@ -21,5 +19,5 @@ cam_height = 1000 #[mm]-Height of camera above ground/module. TODO:Improve this 
 [camera]
 fps = 50 #[Hz]-Framerate to capture at. Is both fps_cam and fps_eff when not modulating. Ignored if modulating.
 fps_ratio = 6#[None]-Ratio between modulation frequency and fps_cam, must be integer larger than 2. Overrides fps if modulating, and determines it as fps_cam=fps_ratio*modulationg_freq
-exposure = 2 #[ms]-Exposure time must be less than 1000/fps_cam
+exposure = 1 #[ms]-Exposure time must be less than 1000/fps_cam
 gain = "Medium" #[None]-Gain can be either "Low", "Medium", or "High"
