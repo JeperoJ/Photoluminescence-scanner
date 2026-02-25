@@ -26,12 +26,14 @@ from tkinter import font
 import tomlkit as tmlk
 import numpy as np
 from  PIL import ImageTk, Image
-from src import gantry_utils, camera_utils, linescan
+from src import gantry_utils, camera_utils, linescan, config_ui
 import threading
 import time
 import datetime
 import serial
 import winsound
+from ui.camera.preview import CameraPreview
+from ui.config.simple_implementation import ConfigInterface
 
 import FliSdk_V2
 
@@ -53,8 +55,6 @@ class LIPI_Scanner_App(ttk.Frame):
                 print(key)
                 for item in self.config[key]:
                     print(item)
-
-
 
             self.fps = 300
             self.tint = 1
@@ -78,11 +78,11 @@ class LIPI_Scanner_App(ttk.Frame):
             #Thought: At high enough fps, one could modulate to different pumping powers
             #TODO: Seperate UI into more classes. Figure out some proper MVC division. Maybe switch UI package. This file is getting bad.
 
-
             self.camera_context = FliSdk_V2.Init()
             self.gantry_handler = None
 
-            self.preview_image = None
+            #self.preview_image = None
+            CameraPreview.start_shared_processor(self.camera_context, fps=50)
 
             #print(FliSdk_V2.ImageProcessing.GetColorMapList(self.camera_context, -1))
 
@@ -97,6 +97,7 @@ class LIPI_Scanner_App(ttk.Frame):
             parent.option_add("*Font", my_font)
 
             #UI Elements
+            self.config = ConfigInterface(self)
 
             #Gantry
             com_ports = gantry_utils.get_ports()
@@ -115,10 +116,11 @@ class LIPI_Scanner_App(ttk.Frame):
             ttk.Entry(self.save_dir_frm, textvariable=self.save_dir_text, font=("Helvetica", 18)).grid(row=0, column=0, sticky="nsew")
             ttk.Button(self.save_dir_frm, text="  Select\nDirectory", command=self.select_directory).grid(row=1, column=0, sticky="nsew")
 
-            self.button_config = ttk.Button(self, text="Config\n(TBD)", command=self.temp) #TODO: Implement Config Window
+            self.config_button = ttk.Button(self, text="Config", command=self._config_button_func)
 
             self.preview_frm = ttk.Frame(self)
-            self.preview = ttk.Label(self.preview_frm)
+            #self.preview = ttk.Label(self.preview_frm)
+            self.preview = CameraPreview(self.preview_frm)
             self.preview.pack(fill="both", expand=True)
         
             self.scan_module_button = ttk.Button(self, text="Start\nScan", state="disabled", command=self.scan_module)
@@ -130,9 +132,9 @@ class LIPI_Scanner_App(ttk.Frame):
             row_weights = [1,5,1,5,5]
             col_weights = [1,1,1,1]
             for i, weight in enumerate(row_weights):
-                tk.Grid.rowconfigure(self, i, weight=weight)
+                self.rowconfigure(i, weight=weight)
             for i, weight in enumerate(col_weights):
-                tk.Grid.columnconfigure(self, i, weight=weight)
+                self.columnconfigure(i, weight=weight)
 
             padding = 5
             self.gantry_dropdown.grid(row=0, column=0, columnspan=2, sticky="nsew", padx=padding, pady=padding)
@@ -141,31 +143,15 @@ class LIPI_Scanner_App(ttk.Frame):
             self.camera_dropdown.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=padding, pady=padding)
             self.camera_button.grid(row=3, column=0, columnspan=2, sticky="nsew", padx=padding, pady=padding)
 
-            self.button_config.grid(row=4, column=1, sticky="nsew", padx=padding, pady=padding)
+            self.config_button.grid(row=4, column=1, sticky="nsew", padx=padding, pady=padding)
             self.save_dir_frm.grid(row=4, column=0, sticky="nsew", padx=padding, pady=padding)
 
             self.preview_frm.grid(row=0, column=2, rowspan=4, columnspan=2, sticky="nsew", padx=padding, pady=padding)
             self.scan_module_button.grid(row=4, column=2, sticky="nsew", padx=padding, pady=padding)
             self.quit_button.grid(row=4, column=3, sticky="nsew", padx=padding, pady=padding)
 
-    def temp(self):
-        window = tk.Toplevel(self)
-        #window.attributes('-fullscreen', True)
-        row_weights = [1]
-        col_weights = [1, 1]
-        for i, weight in enumerate(row_weights):
-            tk.Grid.rowconfigure(window, i, weight=weight)
-        for i, weight in enumerate(col_weights):
-            tk.Grid.columnconfigure(window, i, weight=weight)
-
-        config_options_frame = tk.Frame(window)
-        config_options_frame.grid(row=0, column=0, sticky="nsew")
-
-        config_extra_frame = ttk.Frame(window)
-        config_extra_frame.grid(row=0, column=1, sticky="nsew")
-
-
-
+    def _config_button_func(self):
+        self.config.open()
 
     def update(self):
         self.com_ports = gantry_utils.get_ports()
@@ -204,7 +190,7 @@ class LIPI_Scanner_App(ttk.Frame):
             return
         _popup = self.popup("Gantry Connection", "Connecting to gantry_utils. Please wait...")
         try:
-            self.gantry_handler = gantry_utils.connect(self.com_ports[[str(port) for port in self.com_ports].index(self.gantry_dropdown.get())])
+            self.gantry_handler = gantry_utils.connect(self.com_ports[[str(port) for port in self.com_ports].index(self.gantry_dropdown.get())]) #TODO: Look into using dropdown.current instead
         except (TimeoutError,serial.SerialException) as e:
             _popup.destroy()
             print(e)
@@ -247,7 +233,7 @@ class LIPI_Scanner_App(ttk.Frame):
             return
         _popup = self.popup("Camera Initialization", "Connecting to camera. Please wait...")
         try:
-            camera_utils.init_camera(self.camera_context, self.fps, self.tint, self.camera_dropdown.get(), gain=self.gain)
+            camera_utils.init_camera(self.camera_context, self.camera_dropdown.get())
         except Exception as e:
             _popup.destroy()
             print(e)
@@ -273,31 +259,32 @@ class LIPI_Scanner_App(ttk.Frame):
         #FliSdk_V2.ImageProcessing.EnableAutoClip(self.camera_context, -1, True) #TODO: Clipping type? What does it do?
         FliSdk_V2.ImageProcessing.SetColorMap(self.camera_context, -1, "NONE") #TODO: Play around with color maps
         FliSdk_V2.Start(self.camera_context)
-        self.process_preview()
-        self.display_preview(self.preview)
+        #self.process_preview()
+        #self.display_preview(self.preview)
+        self.preview.display_loop()
         self.update()
 
     #@threaded
-    @threaded
-    def process_preview(self):
-        #Threaded processing script so it does not block the main(ui) thread. Uses time to not do this constantly. Might be better way.
-        #TODO: Add stretching of the image irt. contrast. Should not be a problem now it is in a separate thread.
-        timestamp = time.perf_counter_ns()
-        while True:
-            if FliSdk_V2.IsStarted(self.camera_context) and (time.perf_counter_ns() - timestamp > 10 ** 9 / self.fps): #Only run if enough time elapsed and the SDK is capturing.
-                image = np.array(FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1))  # -1 to get the last image in the buffer. np.array wrap to make sure it is newest version (Dont know if needed just have experienced issues before)
-                #Any image processing goes here. Into new object, and pass that into the fromarray
-                photo = ImageTk.PhotoImage(image=Image.fromarray(image)) #Take array, into PIL image, into image usable in tk. Have no idea if this can be improved
-                self.preview_image = photo #Sets class variable, so it can be fetched by display_preview
-                timestamp = time.perf_counter_ns()
-            else:
-                time.sleep(1E-2)
+    # @threaded
+    # def process_preview(self):
+    #     #Threaded processing script so it does not block the main(ui) thread. Uses time to not do this constantly. Might be better way.
+    #     #TODO: Add stretching of the image irt. contrast. Should not be a problem now it is in a separate thread.
+    #     timestamp = time.perf_counter_ns()
+    #     while True:
+    #         if FliSdk_V2.IsStarted(self.camera_context) and (time.perf_counter_ns() - timestamp > 10 ** 9 / self.fps): #Only run if enough time elapsed and the SDK is capturing.
+    #             image = np.array(FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1))  # -1 to get the last image in the buffer. np.array wrap to make sure it is newest version (Dont know if needed just have experienced issues before)
+    #             #Any image processing goes here. Into new object, and pass that into the fromarray
+    #             photo = ImageTk.PhotoImage(image=Image.fromarray(image)) #Take array, into PIL image, into image usable in tk. Have no idea if this can be improved
+    #             self.preview_image = photo #Sets class variable, so it can be fetched by display_preview
+    #             timestamp = time.perf_counter_ns()
+    #         else:
+    #             time.sleep(1E-2)
 
-    def display_preview(self, label):
-        image = self.preview_image #Capture current stored image, so if it changes during it should not impact this function.
-        label.image = image #Sets it in the label the first time
-        label.configure(image=image) #Sets it in the label the second time. Need both lines else weird stuff happens. No clue why but I have accepted it.
-        self.after(20, self.display_preview, label) #Run this at 50 hz ish, minus processing time or any blocking of the main thread.
+    # def display_preview(self, label):
+    #     image = self.preview_image #Capture current stored image, so if it changes during it should not impact this function.
+    #     label.image = image #Sets it in the label the first time
+    #     label.configure(image=image) #Sets it in the label the second time. Need both lines else weird stuff happens. No clue why but I have accepted it.
+    #     self.after(20, self.display_preview, label) #Run this at 50 hz ish, minus processing time or any blocking of the main thread.
 
     # def camera_display_loop(self):
     #     #print(FliSdk_V2.IsStarted(self.camera_context))
@@ -328,6 +315,8 @@ class LIPI_Scanner_App(ttk.Frame):
         for child in self.save_dir_frm.winfo_children():
             child.configure(state="disabled")
         self.update()
+        #Might need to stop and start after here
+        camera_utils.config_camera(self.camera_context, self.fps, self.tint, gain = self.gain)
         buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
         print(f"Buffer size images: {buffer_size_images}")
         FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)

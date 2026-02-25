@@ -11,13 +11,17 @@ from . import helpers
 
 #TODO: Potentially clean things up by making a Camera class, with an interally handled context
 
-__all__ = ['calibrate_camera', "init_camera", "disconnect", "list"]
+__all__ = ['calibrate_camera', "init_camera", "disconnect", "list", "process_frame", "config_camera"]
 
 def list(context):
     grabbers = FliSdk_V2.DetectGrabbers(context)
     #for s in grabbers:
     #    print(f"- {s}")
     return FliSdk_V2.DetectCameras(context)
+
+def process_frame(context, frame):
+    #TODO: Implement any desired frame processing here
+    pass
 
 def calibrate_camera(context, adaptiveBias=False):
     # Set bad pixel correction
@@ -42,7 +46,7 @@ def calibrate_camera(context, adaptiveBias=False):
     # Debugging display
     return context
 
-def init_camera(context, frameRate, tintVal,camera, gain="Medium"):
+def init_camera(context,camera):
     """
     Initialize the FLI camera.
 
@@ -72,6 +76,8 @@ def init_camera(context, frameRate, tintVal,camera, gain="Medium"):
 
     print("Mode set to full.")
 
+
+def config_camera(context, frameRate, tintVal, gain="Medium"):
     fps = 0
 
     if FliSdk_V2.IsSerialCamera(context):
