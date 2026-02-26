@@ -200,7 +200,7 @@ class ConfigFrame(ttk.Frame):
 
         if values["selector"] == "range":
             def on_scale_change(s):
-                var.set(round(float(s), values["precision"]))
+                var.set(data_type(round(float(s), values["precision"])))
 
             def on_var_change(*args):
                 try:
