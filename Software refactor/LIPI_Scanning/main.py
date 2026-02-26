@@ -158,7 +158,14 @@ class LIPI_Scanner_App(ttk.Frame):
         self.config.open(self._on_config_close)
 
     def _on_config_close(self):
+        print(self.fps, self.tint, self.gain)
+        print(camera_utils.fetch_config(self.camera_context))
         camera_utils.config_camera(self.camera_context, self.fps, self.tint, self.gain)
+        print(self.fps, self.tint, self.gain)
+        print(camera_utils.fetch_config(self.camera_context))
+        camera_utils.config_camera(self.camera_context, float(self.fps), self.tint, self.gain)
+        print(self.fps, self.tint, self.gain)
+        print(camera_utils.fetch_config(self.camera_context))
 
     def update(self):
         self.com_ports = gantry_utils.get_ports()
