@@ -7,6 +7,7 @@ import threading
 from threading import Lock
 import numpy as np
 from PIL import Image, ImageTk
+from ...src import camera_utils
 
 import FliSdk_V2
 
@@ -57,7 +58,8 @@ class Processor:
             if self.camera_context and FliSdk_V2.IsStarted(self.camera_context) and (
                     time.perf_counter_ns() - timestamp > 10 ** 9 / self.fps):
                 try:
-                    image = np.array(FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1))
+                    image_raw = np.array(FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1))
+                    image = camera_utils.process_frame(image_raw)
                     photo = ImageTk.PhotoImage(image=Image.fromarray(image))
                     with self.image_lock:
                         self.current_image = photo

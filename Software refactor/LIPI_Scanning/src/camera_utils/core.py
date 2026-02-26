@@ -6,6 +6,7 @@ import time
 import logging
 from . import imageAcquisition
 from . import helpers
+import numpy as np
 
 #logger = logging.getLogger(__name__)
 
@@ -19,9 +20,13 @@ def list(context):
     #    print(f"- {s}")
     return FliSdk_V2.DetectCameras(context)
 
-def process_frame(context, frame):
+def process_frame(frame):
     #TODO: Implement any desired frame processing here
-    pass
+    img_min = np.min(frame)
+    img_max = np.max(frame)
+    LUT = np.zeros(256, dtype=np.uint8)
+    LUT[img_min:img_max + 1] = np.linspace(start=0, stop=255, num=(img_max - img_min) + 1, endpoint=True, dtype=np.uint8)
+    return LUT[frame]
 
 def calibrate_camera(context, adaptiveBias=False):
     # Set bad pixel correction
