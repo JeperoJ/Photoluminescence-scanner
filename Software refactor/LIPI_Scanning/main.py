@@ -323,7 +323,10 @@ class LIPI_Scanner_App(ttk.Frame):
             child.configure(state="disabled")
         self.update()
         #Might need to stop and start after here
+        camera_utils.fetch_config(self.camera_context)
+        print(self.fps, self.tint, self.gain)
         camera_utils.config_camera(self.camera_context, self.fps, self.tint, gain = self.gain)
+        camera_utils.fetch_config(self.camera_context)
         buffer_size_images = int(2*self.fps*self.gantry_length/(self.gantry_speed/60))
         print(f"Buffer size images: {buffer_size_images}")
         FliSdk_V2.SetBufferSizeInImages(self.camera_context, buffer_size_images)

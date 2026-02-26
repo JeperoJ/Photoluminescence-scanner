@@ -36,10 +36,11 @@ class LIPI_Stitching_App(ttk.Frame):
         self.gantry_speed = 5000 #mm/min
         self.f_mod=50 #Hz
         self.is_modulating=True
-        self.gantry_lengthx = 2100
-        self.gantry_lengthy = 2000
-        self.offset = 200
-        self.drift=0.05622 #new new experimental drift factor
+        self.gantry_lengthx = 2200
+        self.gantry_lengthy = 2100
+        self.offset = 100
+        #self.drift=0.05622 #new new experimental drift factor
+        self.drift = 0
         self.rotation=90 #camera rotation to stitching orientation in degrees
 
         #p1=self.gantry_lengthx-self.offset

@@ -12,7 +12,7 @@ import numpy as np
 
 #TODO: Potentially clean things up by making a Camera class, with an interally handled context
 
-__all__ = ['calibrate_camera', "init_camera", "disconnect", "list", "process_frame", "config_camera"]
+__all__ = ['calibrate_camera', "init_camera", "disconnect", "list", "process_frame", "config_camera", "fetch_config"]
 
 def list(context):
     grabbers = FliSdk_V2.DetectGrabbers(context)
@@ -133,6 +133,14 @@ def config_camera(context, frameRate, tintVal, gain="Medium"):
     res,conversionGain=FliSdk_V2.FliCredThree.GetConversionGain(context)
     print("Previous conversion gain: " + str(conversionGain))
     helpers.setConversionGain(context,gain)
+
+def fetch_config(context):
+    _, fps = FliSdk_V2.FliSerialCamera.GetFps(context)
+    _, response = FliSdk_V2.FliSerialCamera.SendCommand(context, "tint raw")
+    tint = str(float(response)*1000)
+    _, conversionGain = FliSdk_V2.FliCredThree.GetConversionGain(context)
+    print(fps, tint, conversionGain)
+
 
 def disconnect(context):
     """
