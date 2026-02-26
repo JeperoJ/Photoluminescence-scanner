@@ -20,6 +20,7 @@ class ConfigInterface:
         self._settings_changed = {}
         self._cfg_frames = {}
         self._config_dir = os.path.abspath(os.path.expanduser("~//Documents//LIPI"))
+        self.on_close = lambda: None
 
         self.view.rowconfigure(0, weight=1)
         self.view.columnconfigure(0, weight=1)
@@ -83,13 +84,13 @@ class ConfigInterface:
                          values={"selector": "dropdown", "options":["True", "False"], "default": True},
                          callback=self._callback)
         lightbar_cfg.add(name="Current", data_type=float,
-                         values={"selector": "range", "min": 0, "max": 3, "precision":2, "default": 1},
+                         values={"selector": "range", "min": 0, "max": 4.5, "precision":2, "default": 1},
                          callback=self._callback)
         lightbar_cfg.add(name="Frequency", data_type=int,
                          values={"selector": "range", "min": 0, "max": 100, "precision":0, "default": 50},
                          callback=self._callback)
 
-        nb.add(child=lightbar_cfg, text="Gantry")
+        nb.add(child=lightbar_cfg, text="Lightbar")
         self._settings_changed["Lightbar"] = lightbar_cfg.settings
         self._cfg_frames["Lightbar"] = lightbar_cfg
 
@@ -98,7 +99,7 @@ class ConfigInterface:
 
     def open(self, on_close):
         self.window.deiconify()
-        on_close()
+        self.on_close = on_close
 
     def save(self, file_path):
         # Create the file (empty) or open for writing as requested
@@ -165,6 +166,7 @@ class ConfigInterface:
     def _close_button_func(self):
         self._undo_button_func()
         self.window.withdraw()
+        self.on_close()
 
     def _callback(self, *args):
         self.undo_button["state"] = "enabled"
@@ -200,19 +202,23 @@ class ConfigFrame(ttk.Frame):
 
         if values["selector"] == "range":
             def on_scale_change(s):
+                print(s)
                 var.set(data_type(round(float(s), values["precision"])))
 
             def on_var_change(*args):
                 try:
-                    value_set = float(var.get())
-                    # if values["min"] <= val <= values["max"]:
-                    #     scale.set(val)
-                    if values["min"] > value_set:
-                        var.set(values["min"])
-                    elif values["max"] < value_set:
-                        var.set(values["max"])
-                    value_final = float(var.get())
-                    scale.set(value_final)
+                    #value_set = float(var.get())
+                    #print(value_set)
+                    val = float(var.get())
+                    if values["min"] <= val <= values["max"]:
+                        scale.set(val)
+                    # if values["min"] > value_set:
+                    #     var.set(values["min"])
+                    # elif values["max"] < value_set:
+                    #     var.set(values["max"])
+                    # value_final = float(var.get())
+                    # print(value_final)
+                    # scale.set(value_final)
                 except ValueError:
                     pass
 
@@ -256,7 +262,7 @@ if __name__ == "__main__":
     root.rowconfigure(0, weight=1)
 
     config = ConfigInterface(root)
-    ttk.Button(root, text="Open Config", command=config.open).pack(expand=True, fill="both")
+    ttk.Button(root, text="Open Config", command=config.open(lambda: None)).pack(expand=True, fill="both")
     ttk.Button(root, text="Quit", command=root.destroy).pack(expand=True, fill="both")
     ttk.Button(root, text="Print", command=lambda: print(config.settings)).pack(expand=True, fill="both")
 
