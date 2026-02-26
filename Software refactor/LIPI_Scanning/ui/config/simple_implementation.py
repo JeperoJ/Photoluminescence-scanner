@@ -81,7 +81,7 @@ class ConfigInterface:
         lightbar_cfg = ConfigFrame(nb)
         lightbar_cfg.grid(row=0, column=0, sticky="nsew")
         lightbar_cfg.add(name="Light", data_type=bool,
-                         values={"selector": "dropdown", "options":["True", "False"], "default": True},
+                         values={"selector": "dropdown", "options":["True", "False"], "default": "True"},
                          callback=self._callback)
         lightbar_cfg.add(name="Current", data_type=float,
                          values={"selector": "range", "min": 0, "max": 4.5, "precision":2, "default": 1},

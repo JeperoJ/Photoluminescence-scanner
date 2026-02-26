@@ -113,7 +113,8 @@ class LIPI_Stitching_App(ttk.Frame):
     def start_stitch(self):
 
         if self.scan_type.get() == "Modulated":
-            n_images = int(self.fps_var.get()) / int(self.f_mod_var.get())  # Change this value to process different numbers of images
+            n_images = int(self.fps_var.get()) / int(self.f_mod_var.get())# Change this value to process different numbers of images
+            print(n_images)
             if n_images != int(n_images):
                 raise ValueError(f"FPS must be an integer multiple of mod_freq. Current n_images: {n_images}")
             n_images = int(n_images)

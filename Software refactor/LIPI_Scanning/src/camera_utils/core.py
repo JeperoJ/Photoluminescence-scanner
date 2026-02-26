@@ -24,9 +24,7 @@ def process_frame(frame):
     #TODO: Implement any desired frame processing here
     img_min = np.min(frame)
     img_max = np.max(frame)
-    LUT = np.zeros(256, dtype=np.uint8)
-    LUT[img_min:img_max + 1] = np.linspace(start=0, stop=255, num=(img_max - img_min) + 1, endpoint=True, dtype=np.uint8)
-    return LUT[frame]
+    return (frame-img_min)*255/(img_max-img_min)
 
 def calibrate_camera(context, adaptiveBias=False):
     # Set bad pixel correction
