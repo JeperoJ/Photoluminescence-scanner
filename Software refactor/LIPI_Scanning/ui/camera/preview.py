@@ -7,7 +7,7 @@ import threading
 from threading import Lock
 import numpy as np
 from PIL import Image, ImageTk
-from ...src import camera_utils
+from src import camera_utils
 
 import FliSdk_V2
 
