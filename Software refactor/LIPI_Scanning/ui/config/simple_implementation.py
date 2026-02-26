@@ -52,10 +52,10 @@ class ConfigInterface:
                    values={"selector": "dropdown", "options": ["Low", "Medium", "High"], "default": "Medium"},
                        callback=self._callback)
         camera_cfg.add(name="FPS", data_type=int,
-                   values={"selector": "range", "min": 1, "max": 600, "default": 300},
+                   values={"selector": "range", "min": 1, "max": 600, "precision":0, "default": 300},
                        callback=self._callback)
         camera_cfg.add(name="Exposure", data_type=int,
-                   values={"selector": "range", "min": 1, "max": 20, "default": 2},
+                   values={"selector": "range", "min": 1, "max": 20, "precision":0, "default": 2},
                        callback=self._callback)
         #camera.add()
         nb.add(child=camera_cfg, text="Camera")
@@ -66,20 +66,39 @@ class ConfigInterface:
         gantry_cfg = ConfigFrame(nb)
         gantry_cfg.grid(row=0, column=0, sticky="nsew")
         gantry_cfg.add(name="Length", data_type=int,
-                       values={"selector": "range", "min": 1000, "max": 2100, "default": 2100},
+                       values={"selector": "range", "min": 1000, "max": 2100, "precision":0, "default": 2100},
                        callback=self._callback)
         gantry_cfg.add(name="Speed", data_type=int,
-                       values={"selector": "range", "min": 1000, "max": 5000, "default": 5000},
+                       values={"selector": "range", "min": 1000, "max": 5000, "precision":0, "default": 5000},
                        callback=self._callback)
 
         nb.add(child=gantry_cfg, text="Gantry")
         self._settings_changed["Gantry"] = gantry_cfg.settings
         self._cfg_frames["Gantry"] = gantry_cfg
 
+        #Lightbar Config
+        lightbar_cfg = ConfigFrame(nb)
+        lightbar_cfg.grid(row=0, column=0, sticky="nsew")
+        lightbar_cfg.add(name="Light", data_type=bool,
+                         values={"selector": "dropdown", "options":["True", "False"], "default": True},
+                         callback=self._callback)
+        lightbar_cfg.add(name="Current", data_type=float,
+                         values={"selector": "range", "min": 0, "max": 3, "precision":2, "default": 1},
+                         callback=self._callback)
+        lightbar_cfg.add(name="Frequency", data_type=int,
+                         values={"selector": "range", "min": 0, "max": 100, "precision":0, "default": 50},
+                         callback=self._callback)
+
+        nb.add(child=lightbar_cfg, text="Gantry")
+        self._settings_changed["Lightbar"] = lightbar_cfg.settings
+        self._cfg_frames["Lightbar"] = lightbar_cfg
+
+
         self._apply_button_func()
 
-    def open(self):
+    def open(self, on_close):
         self.window.deiconify()
+        on_close()
 
     def save(self, file_path):
         # Create the file (empty) or open for writing as requested
@@ -181,7 +200,7 @@ class ConfigFrame(ttk.Frame):
 
         if values["selector"] == "range":
             def on_scale_change(s):
-                var.set(round(float(s)))
+                var.set(round(float(s), values["precision"]))
 
             def on_var_change(*args):
                 try:

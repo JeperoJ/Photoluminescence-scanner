@@ -56,19 +56,16 @@ class LIPI_Scanner_App(ttk.Frame):
                 for item in self.config[key]:
                     print(item)
 
-            self.fps = 300
-            self.tint = 1
-            self.gain = "Medium"
+            #self.fps = 300
+            #self.tint = 1
+            #self.gain = "Medium"
 
 
-            self.gantry_speed = 5000 #mm/min
-            self.f_mod=50 #Hz
-            self.is_modulating=True
-            #self.fps = self.config["camera"]["fps"]
-            #self.tint = self.config["camera"]["tint"]
-            #self.gain = self.config["camera"]["gain"]
+            #self.gantry_speed = 5000 #mm/min
+            #self.f_mod=50 #Hz
+            #self.is_modulating=True
             #self.gantry_speed = self.config["gantry"]["speed"] #mm/min
-            self.gantry_length = 2100 #mm TODO: Add to config (Make proper gantry config)
+            #self.gantry_length = 2100 #mm TODO: Add to config (Make proper gantry config)
             #TODO: dpf must be smaller than 1 (dpf calculation from processing)
             #TODO: Check if fps is integer multiple of modulation freq
             #TODO: If modulation do dpf using f_mod
@@ -98,6 +95,13 @@ class LIPI_Scanner_App(ttk.Frame):
 
             #UI Elements
             self.config = ConfigInterface(self)
+
+            self.fps = self.config.settings["Camera"]["FPS"]
+            self.tint = self.config.settings["Camera"]["Exposure"]
+            self.gain = self.config.settings["Camera"]["Gain"]
+
+            self.gantry_speed = self.config.settings["Gantry"]["Speed"]
+            self.gantry_length = self.config.settings["Gantry"]["Length"]
 
             #Gantry
             com_ports = gantry_utils.get_ports()
@@ -151,7 +155,10 @@ class LIPI_Scanner_App(ttk.Frame):
             self.quit_button.grid(row=4, column=3, sticky="nsew", padx=padding, pady=padding)
 
     def _config_button_func(self):
-        self.config.open()
+        self.config.open(self._on_config_close)
+
+    def _on_config_close(self):
+        camera_utils.config_camera(self.camera_context, self.fps, self.tint, self.gain)
 
     def update(self):
         self.com_ports = gantry_utils.get_ports()
