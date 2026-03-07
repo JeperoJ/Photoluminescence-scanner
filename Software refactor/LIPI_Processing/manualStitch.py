@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import os
 
 from src.utils import ingaas_processing
-from src.stitching import core
+from src import stitching
 from src.stitching import helpers
 import cv2
 import tifffile
@@ -89,7 +89,7 @@ def manualstitch(source,calpath,rotation=0,speed=5000,drift=0.0466,nsteps=100,fp
             cv2.imshow("Image", ingaas_processing.lin_stretch_img(imagerot[i], 1, 99.99))
             cv2.waitKey(1)
         cv2.destroyAllWindows()
-    PLimg=core.continuous(images=imagerot,speed=speed,fps=fps,drift=drift)
+    PLimg=stitching.continuous(images=imagerot,speed=speed,fps=fps,drift=drift)
     print("stitch done!")
     #Save stitched image
     save_path = source+"stitched_image_cont"
