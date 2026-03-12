@@ -23,7 +23,7 @@ def continuous(gcode_handler,context,savePath,frameRate,speed=5000,gantry_length
     - The function waits for the gantry to complete its movement before finishing.
     - The scanned image is saved with a timestamp in the filename.
     """
-    offsetBegin=200 #offset from the first edge of the gantry to end stops.
+    offsetBegin=100 #offset from the first edge of the gantry to end stops.
     px=gantry_lengthx-offsetBegin #Effective length of gantry in the X direction
     py=gantry_lengthy #Fixed length of gantry in the Y direction
     speedx=px*speed/(math.sqrt(px**2+py**2)) #Calculate speed in the X direction

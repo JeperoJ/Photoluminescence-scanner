@@ -17,8 +17,8 @@ def set_fps(context,val):
         FliSdk_V2.FliCblueSfnc.SetAcquisitionFrameRate(context, valFloat)
         _, fps_new = FliSdk_V2.FliCblueSfnc.GetAcquisitionFrameRate(context)
 
-    logger.debug("Old camera FPS: " + str(fps_old))
-    logger.info("Camera FPS successfully set to: " + str(fps_new))
+    #logger.debug("Old camera FPS: " + str(fps_old))
+    #logger.info("Camera FPS successfully set to: " + str(fps_new))
 
 def setConversionGain(context,conversionGain):
     """

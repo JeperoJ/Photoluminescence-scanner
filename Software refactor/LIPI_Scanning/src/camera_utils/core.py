@@ -6,18 +6,25 @@ import time
 import logging
 from . import imageAcquisition
 from . import helpers
+import numpy as np
 
 #logger = logging.getLogger(__name__)
 
 #TODO: Potentially clean things up by making a Camera class, with an interally handled context
 
-__all__ = ['calibrate_camera', "init_camera", "disconnect", "list"]
+__all__ = ['calibrate_camera', "init_camera", "disconnect", "list", "process_frame", "config_camera", "fetch_config"]
 
 def list(context):
     grabbers = FliSdk_V2.DetectGrabbers(context)
     #for s in grabbers:
     #    print(f"- {s}")
     return FliSdk_V2.DetectCameras(context)
+
+def process_frame(frame):
+    #TODO: Implement any desired frame processing here
+    img_min = np.min(frame)
+    img_max = np.max(frame)
+    return (frame-img_min)*255/(img_max-img_min)
 
 def calibrate_camera(context, adaptiveBias=False):
     # Set bad pixel correction
@@ -42,7 +49,7 @@ def calibrate_camera(context, adaptiveBias=False):
     # Debugging display
     return context
 
-def init_camera(context, frameRate, tintVal,camera, gain="Medium"):
+def init_camera(context,camera):
     """
     Initialize the FLI camera.
 
@@ -72,6 +79,8 @@ def init_camera(context, frameRate, tintVal,camera, gain="Medium"):
 
     print("Mode set to full.")
 
+
+def config_camera(context, frameRate, tintVal, gain="Medium"):
     fps = 0
 
     if FliSdk_V2.IsSerialCamera(context):
@@ -122,6 +131,14 @@ def init_camera(context, frameRate, tintVal,camera, gain="Medium"):
     res,conversionGain=FliSdk_V2.FliCredThree.GetConversionGain(context)
     print("Previous conversion gain: " + str(conversionGain))
     helpers.setConversionGain(context,gain)
+
+def fetch_config(context):
+    _, fps = FliSdk_V2.FliSerialCamera.GetFps(context)
+    _, response = FliSdk_V2.FliSerialCamera.SendCommand(context, "tint raw")
+    tint = str(float(response)*1000)
+    _, conversionGain = FliSdk_V2.FliCredThree.GetConversionGain(context)
+    print(fps, tint, conversionGain)
+
 
 def disconnect(context):
     """
