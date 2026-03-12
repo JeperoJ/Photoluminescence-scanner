@@ -58,23 +58,8 @@ class LIPI_Stitching_App(ttk.Frame):
  
         # UI ELEMENTS
         #Title text
-        # Directory selection
-        self.save_dir_frm = ttk.Frame(self)
-        tk.Grid.columnconfigure(self.save_dir_frm, 0, weight=1)
-        tk.Grid.rowconfigure(self.save_dir_frm, 0, weight=2)
-        tk.Grid.rowconfigure(self.save_dir_frm, 1, weight=8)
-        self.save_dir_text = tk.StringVar()
-        ttk.Label(self, text="File location:").pack()
-        ttk.Entry(self.save_dir_frm, textvariable=self.save_dir_text, font=("Helvetica", 18)).grid(row=0, column=0, sticky="nsew")
-        ttk.Button(self.save_dir_frm, text="  Select\nDirectory", command=self.select_directory).grid(row=1, column=0, sticky="nsew")
-        self.save_dir_frm.pack(fill="both", padx=10, pady=10)
         
-
-        # Scan Type selection
-        self.scan_type = tk.StringVar(value="Modulated")
-        ttk.Label(self, text="Scan Type:").pack()
-        ttk.Combobox(self, textvariable=self.scan_type, values=["Modulated", "Continuous Bias"], state="readonly").pack()
-
+        
         # Config Menu
         self.config_frm = ttk.LabelFrame(self, text="Configuration")
         self.config_frm.pack(fill="both", padx=10, pady=10)
@@ -95,11 +80,26 @@ class LIPI_Stitching_App(ttk.Frame):
         self.gain_var = tk.StringVar(value=self.gain)
         ttk.Combobox(self.config_frm, textvariable=self.gain_var, values=["Low", "Medium", "High"], state="readonly", width=8).grid(row=3, column=1)
         
+        # Scan Type selection
+        self.scan_type = tk.StringVar(value="Modulated")
+        ttk.Label(self, text="Scan Type:").pack()
+        ttk.Combobox(self, textvariable=self.scan_type, values=["Modulated", "Continuous Bias"], state="readonly").pack()
 
         # Separate Modulation selection
         ttk.Label(self, text="Separate Modulation:").pack()
         self.separate_modulation = tk.StringVar(value="Yes")
         ttk.Combobox(self, textvariable=self.separate_modulation, values=["Yes", "No"], state="readonly").pack()
+        
+        # Directory selection
+        self.save_dir_frm = ttk.Frame(self)
+        tk.Grid.columnconfigure(self.save_dir_frm, 0, weight=1)
+        tk.Grid.rowconfigure(self.save_dir_frm, 0, weight=2)
+        tk.Grid.rowconfigure(self.save_dir_frm, 1, weight=8)
+        self.save_dir_text = tk.StringVar()
+        ttk.Label(self, text="File location:").pack()
+        ttk.Entry(self.save_dir_frm, textvariable=self.save_dir_text, font=("Helvetica", 18)).grid(row=0, column=0, sticky="nsew")
+        ttk.Button(self.save_dir_frm, text="  Select\nDirectory", command=self.select_directory).grid(row=1, column=0, sticky="nsew")
+        self.save_dir_frm.pack(fill="both", padx=10, pady=10)
 
         # Start Stitch Button
         self.stitch_button = ttk.Button(self, text="Start Stitch", state="disabled", command=self.start_stitch)
