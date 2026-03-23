@@ -59,7 +59,8 @@ class Processor:
                     time.perf_counter_ns() - timestamp > 10 ** 9 / self.fps):
                 try:
                     image_raw = np.array(FliSdk_V2.GetProcessedImageRGBANumpyArray(self.camera_context, -1))
-                    image = camera_utils.process_frame(image_raw)
+                    #image = camera_utils.process_frame(image_raw)
+                    image = image_raw
                     photo = ImageTk.PhotoImage(image=Image.fromarray(image))
                     with self.image_lock:
                         self.current_image = photo
