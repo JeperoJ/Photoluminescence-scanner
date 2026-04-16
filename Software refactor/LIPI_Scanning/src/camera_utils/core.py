@@ -26,12 +26,13 @@ def process_frame(frame):
     img_max = np.max(frame)
     return (frame-img_min)*255/(img_max-img_min)
 
-def calibrate_camera(context, adaptiveBias=False):
+def calibrate_camera(context, adaptiveBias=False,build_bias=True,):
     # Set bad pixel correction
     helpers.PixelCorrect(context, True)
 
     # Buidling bias correction. Choose between NUC calibrated bias and FLI's adaptive bias (only C-RED3?)
-    helpers.BuildNUCBias(context)
+    if build_bias:
+        helpers.BuildNUCBias(context)
     if adaptiveBias:
         imageAcquisition.EnableAdaptBias(context)
         
@@ -44,8 +45,8 @@ def calibrate_camera(context, adaptiveBias=False):
     FliSdk_V2.FliCredThree.EnableAntiBlooming(context, True)
     print("Anti-blooming enabled")
     #Enable auto clip. Only after starting acquisition?????
-    FliSdk_V2.ImageProcessing.EnableAutoClip(context, -1, True)
-    print("Auto clip enabled")
+    FliSdk_V2.ImageProcessing.EnableAutoClip(context, -1, False)
+    print("Auto clip Disabled")
     # Debugging display
     return context
 

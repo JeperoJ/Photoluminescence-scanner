@@ -84,7 +84,7 @@ class LIPI_Scanner_App(ttk.Frame):
             #print(FliSdk_V2.ImageProcessing.GetColorMapList(self.camera_context, -1))
 
             #UI Appearance
-            #parent.attributes('-fullscreen', True)
+            parent.attributes('-fullscreen', True)
             parent.protocol("WM_DELETE_WINDOW", quit)
             parent.title("LIPI Scanner")
             s = ttk.Style()
@@ -259,11 +259,12 @@ class LIPI_Scanner_App(ttk.Frame):
         self.update()
 
     def calibrate_camera(self):
-        self.popup("Camera Calibration", "Please put on the camera lens cap and press OK to continue.", dismiss=True)
+        if self.config.settings["Camera"]["Build Bias"]:
+            self.popup("Camera Calibration", "Please put on the camera lens cap and press OK to continue.", dismiss=True)
         _popup = self.popup("Camera Calibration", "Calibrating camera. Please wait...")
         _popup.update()
         try:
-           camera_utils.calibrate_camera(self.camera_context, adaptiveBias=False)
+           camera_utils.calibrate_camera(self.camera_context, adaptiveBias=self.config.settings["Camera"]["Adaptive Bias"], build_bias=self.config.settings["Camera"]["Build Bias"])
         except Exception as e:
            _popup.destroy()
            print(e)

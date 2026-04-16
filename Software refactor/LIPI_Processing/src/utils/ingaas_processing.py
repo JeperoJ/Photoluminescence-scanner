@@ -10,12 +10,21 @@ import os
 import sys
 
 
-def load_raw_image(file_path, width, height):
+def load_raw_image(file_path, width, height, images=None, offset_images=0):
     """Load a .RAW multi-image file."""
-    image = np.fromfile(file_path, dtype=np.int16, sep="")
-    num_images = image.size // (width * height)
-    if image.size != num_images * width * height:
-        raise ValueError(f"File size does not match expected dimensions: {num_images} images of {width}x{height}")
+    if images is None:
+        bytes = -1
+    else:
+        bytes = width*height*images
+
+    image = np.fromfile(file_path, dtype=np.int16, sep="", count=bytes, offset=2*offset_images*width*height)
+
+    if images is None:
+        num_images = image.size // (width * height)
+        if image.size != num_images * width * height:
+            raise ValueError(f"File size does not match expected dimensions: {num_images} images of {width}x{height}")
+    else:
+        num_images = images
     image = image.reshape((num_images, height, width))
     #image= int16_2_uint16(image)
     return image

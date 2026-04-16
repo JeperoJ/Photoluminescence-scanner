@@ -55,8 +55,14 @@ class ConfigInterface:
         camera_cfg.add(name="FPS", data_type=int,
                    values={"selector": "range", "min": 1, "max": 600, "precision":0, "default": 300},
                        callback=self._callback)
-        camera_cfg.add(name="Exposure", data_type=int,
-                   values={"selector": "range", "min": 1, "max": 20, "precision":0, "default": 2},
+        camera_cfg.add(name="Exposure", data_type=float,
+                   values={"selector": "range", "min": 0, "max": 3, "precision":2, "default": 2},
+                       callback=self._callback)
+        camera_cfg.add(name="Build Bias", data_type=bool,
+                       values={"selector": "dropdown", "options": ["True", "False"], "default": "True"},
+                       callback=self._callback)
+        camera_cfg.add(name="Adaptive Bias", data_type=bool,
+                       values={"selector": "dropdown", "options": ["True", "False"], "default": "True"},
                        callback=self._callback)
         #camera.add()
         nb.add(child=camera_cfg, text="Camera")
