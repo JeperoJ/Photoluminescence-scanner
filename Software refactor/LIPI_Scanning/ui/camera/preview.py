@@ -7,7 +7,7 @@ import threading
 from threading import Lock
 import numpy as np
 from PIL import Image, ImageTk
-from src import camera_utils
+from ...src import camera_utils
 
 import FliSdk_V2
 
@@ -101,3 +101,16 @@ class CameraPreview(ttk.Label):
             self.image = image
             self.configure(image=image)
         self.after(20, self.display_loop)
+
+if __name__ == "__main__":
+    context = FliSdk_V2.Init()
+    root = tk.Tk()
+
+    cams = camera_utils.list(context)
+    camera_utils.init_camera(context, cams[0])
+
+    CameraPreview.start_shared_processor(context, fps=50)
+    preview = CameraPreview(root)
+    preview.pack(fill="both", expand=True)
+    preview.display_loop()
+    root.mainloop()
