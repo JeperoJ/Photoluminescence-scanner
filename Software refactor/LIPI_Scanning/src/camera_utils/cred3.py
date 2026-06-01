@@ -329,7 +329,7 @@ class Cred3:
         res = setter()
         if not res:
             raise ValueError(f"{setting} state could not be set. Got response {res}")
-        _, state_new = getter(self.context)
+        _, state_new = getter()
         print(f"{setting} state changed from {state_old} to {state_new}")
         if cfg_key is not None:
             self.config[cfg_key] = state_new
