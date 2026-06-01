@@ -8,16 +8,17 @@ import datetime
 class Scanner:
     def __init__(self):
         #TODO: Figure out what actually makes sense to do with the gantry / robot
+        self.configured = False
 
         self.camera = cred3.Cred3()
         self.robot = gantry.Gantry()
 
-        self.general_config = {}
-        self._general_config_default = {
+        self.config = {}
+        self._config_default = {
             "offset" : 100,
         }
-        self.config = {
-            "general" : self.general_config,
+        self.system_config = {
+            "general" : self.config,
             "camera" : self.camera.config,
             "robot" : self.robot.config,
         }
@@ -26,14 +27,34 @@ class Scanner:
         self.camera.close()
         self.robot.close()
 
+    def configure(self, config_dict=None, **settings):
+        if config_dict is None:
+            config_dict = settings
+
+        if not self.configured:
+            config_dict = self._config_default.update(config_dict)
+
+        for key, value in config_dict:
+            self.config[key] = value
+
+        self.configured = True
+
+    def configure_system(self, config_dict=None):
+        if config_dict is None:
+            self.configure()
+            self.camera.configure()
+            self.robot.configure()
+        else:
+            self.configure(config_dict["general"])
+            self.camera.configure(config_dict["camera"])
+            self.robot.configure(config_dict["robot"])
+
     def save_config(self, filepath):
         tmlk.dump(self.config, filepath)
 
     def load_config(self, filepath):
         config_dict = tmlk.load(filepath)
-        self.general_config = config_dict["general"]
-        self.camera.configure(config_dict["camera"])
-        self.robot.configure(config_dict["robot"])
+        self.configure(config_dict)
 
     def scan(self, savePath):
         """

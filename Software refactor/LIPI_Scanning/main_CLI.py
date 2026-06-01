@@ -29,9 +29,12 @@ scan_robot.camera.connect()
 print("Camera connected!")
 
 #Config load
-print("Load config. Please point to a valid config file")
-file = filedialog.askopenfilename()
-scan_robot.load_config(file)
+t=input("Press enter to load config file, or type 1 to use default")
+if t == "1":
+    scan_robot.configure_system()
+else:
+    file = filedialog.askopenfilename()
+    scan_robot.load_config(file)
 
 #Calibrate gantry
 input("Calibrating gantry. Press enter when ready...")
