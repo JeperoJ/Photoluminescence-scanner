@@ -51,11 +51,13 @@ class Scanner:
             self.robot.configure(config_dict["robot"])
 
     def save_config(self, filepath):
-        tmlk.dump(self.config, filepath)
+        with open(filepath, "w") as f:
+            tmlk.dump(self.system_config, f)
 
     def load_config(self, filepath):
-        config_dict = tmlk.load(filepath)
-        self.configure(config_dict)
+        with open(filepath, "r") as f:
+            config_dict = tmlk.load(filepath)
+            self.configure_system(config_dict)
 
     def scan(self, savePath):
         """
@@ -75,6 +77,7 @@ class Scanner:
         - The scanned image is saved with a timestamp in the filename.
         """
         directory = os.path.join(savePath, datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
+        os.mkdir(directory)
         scan_name = f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.raw"
         length = min(self.robot.config["length_upper"], self.robot.config["length_lower"]+self.config["offset"])
         #nImages = int(length / (self.robot.config["speed"] / 60) * frameRate)
