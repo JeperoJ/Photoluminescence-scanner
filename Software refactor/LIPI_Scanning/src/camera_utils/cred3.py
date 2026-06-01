@@ -309,7 +309,7 @@ class Cred3:
             setting = "FPS",
             cfg_key = "fps",
             setter = lambda: FliSdk_V2.FliSerialCamera.SetFps(self.context, fps),
-            getter = lambda: FliSdk_V2.FliSerialCamera.Fps(self.context)
+            getter = lambda: FliSdk_V2.FliSerialCamera.GetFps(self.context)
         )
 
     def _set_exposure(self, exposure: float):
