@@ -359,11 +359,12 @@ class Cred3:
                      )
 
     def _toggle_flat(self, state: bool):
-        return self._toggle("Flat Correction",
-                     cfg_key = "flat_correction",
-                     setter=lambda: FliSdk_V2.FliSerialCamera.EnableFlat(self.context, state),
-                     getter=lambda: FliSdk_V2.FliCred.GetFlatState(self.context)
-                     )
+        pass
+        # return self._toggle("Flat Correction",
+        #              cfg_key = "flat_correction",
+        #              setter=lambda: FliSdk_V2.FliSerialCamera.EnableFlat(self.context, state),
+        #              getter=lambda: FliSdk_V2.FliCred.GetFlatState(self.context)
+        #              )
 
     def _toggle_anti_blooming(self, state: bool):
         return self._toggle("Anti Blooming",
