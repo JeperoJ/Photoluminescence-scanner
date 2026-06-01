@@ -56,4 +56,5 @@ if scan_robot.camera.config["bias_type"] == "Manual":
 
 #Specify data path and scan
 path = filedialog.askdirectory()
+input("Press enter when ready for scan. Enable lightbar and remove camera cover.")
 scan_robot.scan(path)

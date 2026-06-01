@@ -76,11 +76,11 @@ class Scanner:
         """
         directory = os.path.join(savePath, datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
         scan_name = f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.raw"
-        length = min(self.robot.config["length_upper"], self.robot.config["length_lower"]+self.general_config["offset"])
+        length = min(self.robot.config["length_upper"], self.robot.config["length_lower"]+self.config["offset"])
         #nImages = int(length / (self.robot.config["speed"] / 60) * frameRate)
 
-        self.robot.handler.set_position(self.general_config["offset"], 0)  # Set offset (to see panel before the light bar)
-        self.robot.handler.set_position(length, length - self.general_config["offset"])
+        self.robot.handler.set_position(self.config["offset"], 0)  # Set offset (to see panel before the light bar)
+        self.robot.handler.set_position(length, length - self.config["offset"])
         self.camera.start_recording()
         self.robot.handler.wait()
         self.camera.stop_recording()
