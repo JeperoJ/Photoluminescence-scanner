@@ -91,6 +91,7 @@ class Cred3:
         """
 
         if camera is None:
+            print(self.list())
             camera = self.list()[0]
 
         response = FliSdk_V2.SetCamera(self.context, camera)
@@ -98,8 +99,9 @@ class Cred3:
             raise ValueError(f"Camera could not be set. Got response {response}")
 
         res = FliSdk_V2.IsCredThree(self.context)
-        if not res:
-            raise ValueError(f"Camera is wrong type. This implementation is made exclusively for the FLI CRED-3.")
+        print(res)
+        #if not res:
+        #    raise ValueError(f"Camera is wrong type. This implementation is made exclusively for the FLI CRED-3.")
 
         FliSdk_V2.SetMode(self.context, FliSdk_V2.Mode.Full)
         response = FliSdk_V2.Update(self.context)
