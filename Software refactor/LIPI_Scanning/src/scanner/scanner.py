@@ -56,7 +56,7 @@ class Scanner:
 
     def load_config(self, filepath):
         with open(filepath, "r") as f:
-            config_dict = tmlk.load(filepath)
+            config_dict = tmlk.load(f)
             self.configure_system(config_dict)
 
     def scan(self, savePath):
