@@ -181,7 +181,6 @@ class Cred3:
     def start_recording(self):
         if not self.is_ready():
             raise ValueError("Camera is not ready. Please do setup before recording.")
-        self.start()
         self._start_frame = FliSdk_V2.GetBufferFilling(self.context)
 
     def stop_recording(self):

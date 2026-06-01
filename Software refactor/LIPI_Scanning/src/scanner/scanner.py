@@ -80,7 +80,13 @@ class Scanner:
         os.mkdir(directory)
         scan_name = f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.raw"
         length = min(self.robot.config["length_upper"], self.robot.config["length_lower"]+self.config["offset"])
+
+        buffer_size_images = int(2 * self.camera.config["fps"] * length / (self.robot.config["speed"] / 60))
+        print(f"Buffer size images: {buffer_size_images}")
+        FliSdk_V2.SetBufferSizeInImages(self.camera.context, buffer_size_images)
+        print(f"Context buffer size: {FliSdk_V2.GetImagesCapacity(self.camera.context)}")
         #nImages = int(length / (self.robot.config["speed"] / 60) * frameRate)
+        self.camera.start()
 
         self.robot.handler.set_position(self.config["offset"], 0)  # Set offset (to see panel before the light bar)
         self.robot.handler.set_position(length, length - self.config["offset"])
