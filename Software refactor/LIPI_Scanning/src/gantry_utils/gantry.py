@@ -66,7 +66,7 @@ class Gantry():
             config_dict = settings
 
         if not self.configured:
-            config_dict = self._config_default.update(config_dict)
+            config_dict = self._config_default | config_dict
 
         for key,value in config_dict:
             if key not in self._config_default:
