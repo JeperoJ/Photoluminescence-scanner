@@ -1,11 +1,53 @@
-from nicegui import ui
+import flet as ft
 
-with ui.row():
-    with ui.column():
-        ui.label("Header?").classes("text-h1")
-        ui.label("Hello NiceGUI")
-    with ui.column():
-        ui.markdown("# Big Footer")
-        ui.label("Hello NiceGUI")
 
-ui.run(native=True, fullscreen=True)
+def main(page: ft.Page):
+    page.title = "Calc App"
+    result = ft.Text(value="0")
+
+    page.add(
+        ft.Row(controls=[result]),
+        ft.Row(
+            controls=[
+                ft.Button("AC"),
+                ft.Button("+/-"),
+                ft.Button("%"),
+                ft.Button("/"),
+            ]
+        ),
+        ft.Row(
+            controls=[
+                ft.Button("7"),
+                ft.Button("8"),
+                ft.Button("9"),
+                ft.Button("*"),
+            ]
+        ),
+        ft.Row(
+            controls=[
+                ft.Button("4"),
+                ft.Button("5"),
+                ft.Button("6"),
+                ft.Button("-"),
+            ]
+        ),
+        ft.Row(
+            controls=[
+                ft.Button("1"),
+                ft.Button("2"),
+                ft.Button("3"),
+                ft.Button("+"),
+            ]
+        ),
+        ft.Row(
+            controls=[
+                ft.Button("0", expand=2),
+                ft.Button(".", expand=1),
+                ft.Button("="),
+            ], expand=1
+        ),
+    )
+
+
+if __name__ == "__main__":
+    ft.run(main)

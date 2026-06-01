@@ -7,7 +7,7 @@ if fli_path not in sys.path:
     sys.path.append(fli_path)
 
 import FliSdk_V2
-import typing
+#import typing
 
 class Cred3:
     """
@@ -37,7 +37,7 @@ class Cred3:
         - is_ready(): Checks if current class state implies camera ready for operation. Does not check if class state reflects reality.
 
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self.context = FliSdk_V2.Init()
         self.width = 640
         self.height = 512
@@ -65,9 +65,15 @@ class Cred3:
             "anti_blooming": self._toggle_anti_blooming
         }
 
-    def __del__(self):
+        self._start_frame = None
+        self._end_frame = None
+
+    def close(self):
         self.stop()
         FliSdk_V2.Exit(self.context)
+
+    def __del__(self):
+        self.close()
 
     def list(self):
         if self.connected:
@@ -153,9 +159,41 @@ class Cred3:
         for key, value in config_dict:
             if key not in self._config_default:
                 raise ValueError(f"Invalid setting {key}. Valid settings are {self._config_default.keys()}")
+            elif key == "fps":
+                if "exposure" in config_dict:
+                    continue
+                else:
+                    self._config_functions["fps"](config_dict["fps"])
+                    self._config_functions["exposure"](self.config["exposure"])
+                    continue
+            elif key == "exposure":
+                if "fps" in config_dict:
+                    self._config_functions["fps"](config_dict["fps"])
+                    self._config_functions["exposure"](config_dict["exposure"])
+                    continue
             self._config_functions[key](value)
 
         self.configured = True
+
+    def start_recording(self):
+        if not self.is_ready():
+            raise ValueError("Camera is not ready. Please do setup before recording.")
+        self._start_frame = FliSdk_V2.GetBufferFilling(self.context)
+
+    def stop_recording(self):
+        if self._start_frame is None:
+            raise ValueError("Recording was never started.")
+        self._end_frame = FliSdk_V2.GetBufferFilling(self.context)
+
+
+    def save_recording(self, filepath):
+        if self._start_frame is None:
+            raise ValueError("Recording was never started.")
+
+        if self._end_frame is None:
+            self.stop_recording()
+
+        FliSdk_V2.SaveBuffer(self.context, filepath, self._start_frame, self._end_frame)
 
     
     def build_bias(self):
@@ -173,47 +211,47 @@ class Cred3:
             raise ValueError("Error while building flat.")
         print("Flat built successfully")
 
-    def _BuildNUCBias_legacy(self, frames=256):
-        """
-        Build NUC Bias for FLI C-RED 3.
-
-        Parameters:
-        context (object): The FLI SDK context.
-
-        Returns:
-        None
-        """
-        print("NUC Bias correction for FLI C-RED 3 started.....")
-        print("[DEBUGGING]getting current bias state")
-        # _, state = FliSdk_V2.FliCred.GetBiasState(self.context)
-        # if state:
-        #     # Change bias to false to generate new bias. Not sure if necessary but do it anyway?
-        #     FliSdk_V2.FliSerialCamera.EnableBias(context, False)
-        state_before, _ = self._toggle_bias(False)
-        #res, state = FliSdk_V2.FliCred.GetBiasState(context)
-        print("[DEBUGGING] State before correction: (should be false)")
-        print(state_before)
-
-        # Start the camera acquisition - bias building requires the camera to be running
-        print("Starting camera acquisition for bias building...")
-        FliSdk_V2.Start(self.context)
-
-        print("Building bias")
-        res = FliSdk_V2.FliCred.BuildBias(self.context)
-        if not res:
-            print(res)
-            print("Error while building bias.")
-            self.stop()
-            raise ValueError("BIAS???")
-        print("Bias built! Enabling...")
-        self.stop()
-        FliSdk_V2.FliSerialCamera.EnableBias(self.context, True)
-        print("Bias Enabled!")
-        print("[DEBUGGING]getting new bias state (should be true")
-        res, state = FliSdk_V2.FliCred.GetBiasState(self.context)
-        # print(res)
-        print(state)
-        self.calibrated = True
+    # def _BuildNUCBias_legacy(self, frames=256):
+    #     """
+    #     Build NUC Bias for FLI C-RED 3.
+    #
+    #     Parameters:
+    #     context (object): The FLI SDK context.
+    #
+    #     Returns:
+    #     None
+    #     """
+    #     print("NUC Bias correction for FLI C-RED 3 started.....")
+    #     print("[DEBUGGING]getting current bias state")
+    #     # _, state = FliSdk_V2.FliCred.GetBiasState(self.context)
+    #     # if state:
+    #     #     # Change bias to false to generate new bias. Not sure if necessary but do it anyway?
+    #     #     FliSdk_V2.FliSerialCamera.EnableBias(context, False)
+    #     state_before, _ = self._toggle_bias(False)
+    #     #res, state = FliSdk_V2.FliCred.GetBiasState(context)
+    #     print("[DEBUGGING] State before correction: (should be false)")
+    #     print(state_before)
+    #
+    #     # Start the camera acquisition - bias building requires the camera to be running
+    #     print("Starting camera acquisition for bias building...")
+    #     FliSdk_V2.Start(self.context)
+    #
+    #     print("Building bias")
+    #     res = FliSdk_V2.FliCred.BuildBias(self.context)
+    #     if not res:
+    #         print(res)
+    #         print("Error while building bias.")
+    #         self.stop()
+    #         raise ValueError("BIAS???")
+    #     print("Bias built! Enabling...")
+    #     self.stop()
+    #     FliSdk_V2.FliSerialCamera.EnableBias(self.context, True)
+    #     print("Bias Enabled!")
+    #     print("[DEBUGGING]getting new bias state (should be true")
+    #     res, state = FliSdk_V2.FliCred.GetBiasState(self.context)
+    #     # print(res)
+    #     print(state)
+    #     self.calibrated = True
 
     def _set_bias_type(self, bias_type: Literal["Off", "Manual", "Adaptive"]):
         print("Setting bias for FLI C-RED 3.")
@@ -283,7 +321,7 @@ class Cred3:
             setter = lambda: FliSdk_V2.FliCredThree.SetTint(self.context, exposure)
         )
 
-    def _toggle(self, setting, setter, getter, cfg_key=None, ):
+    def _toggle(self, setting, setter, getter, cfg_key=None):
         self.calibrated = False
         _, state_old = getter()
         res = setter()
@@ -295,7 +333,7 @@ class Cred3:
             self.config[cfg_key] = state_new
 
     def _toggle_bias(self, state: bool):
-        return self._toggle("Flat Correction",
+        return self._toggle("Bias Correction",
                      setter=lambda: FliSdk_V2.FliSerialCamera.EnableBias(self.context, state),
                      getter=lambda: FliSdk_V2.FliCred.GetBiasState(self.context)
                      )
@@ -319,7 +357,7 @@ class Cred3:
         return self._toggle("Flat Correction",
                      cfg_key = "flat_correction",
                      setter=lambda: FliSdk_V2.FliSerialCamera.EnableFlat(self.context, state),
-                     getter=FliSdk_V2.FliCred.GetFlatState(self.context)
+                     getter=lambda: FliSdk_V2.FliCred.GetFlatState(self.context)
                      )
 
     def _toggle_anti_blooming(self, state: bool):

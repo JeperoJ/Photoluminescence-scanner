@@ -37,7 +37,6 @@ from ui.config.simple_implementation import ConfigInterface
 
 import FliSdk_V2
 
-
 def threaded(fn):
     def run(*k, **kw):
         t = threading.Thread(target=fn, args=k, kwargs=kw, daemon=True)
