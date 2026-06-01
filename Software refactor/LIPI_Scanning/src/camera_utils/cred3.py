@@ -159,6 +159,7 @@ class Cred3:
             config_dict = self._config_default | config_dict
 
         for key, value in config_dict.items():
+            print(key)
             if key not in self._config_default:
                 raise ValueError(f"Invalid setting {key}. Valid settings are {self._config_default.keys()}")
             elif key == "fps":
@@ -328,6 +329,8 @@ class Cred3:
         _, state_old = getter()
         res = setter()
         if not res:
+            print(state_old)
+            print(res)
             raise ValueError(f"{setting} state could not be set. Got response {res}")
         _, state_new = getter()
         print(f"{setting} state changed from {state_old} to {state_new}")

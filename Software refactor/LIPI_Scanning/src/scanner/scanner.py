@@ -35,6 +35,7 @@ class Scanner:
             config_dict = self._config_default | config_dict
 
         for key, value in config_dict.items():
+            print(key)
             self.config[key] = value
 
         self.configured = True
