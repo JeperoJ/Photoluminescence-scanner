@@ -129,6 +129,7 @@ class Cred3:
         if not self.connected:
             raise ValueError("Class instance not connected to a camera. Run connect function first.")
         FliSdk_V2.Start(self.context)
+        print(FliSdk_V2.FliCred.GetStatus(self.context))
         
     def stop(self):
         FliSdk_V2.Stop(self.context)
