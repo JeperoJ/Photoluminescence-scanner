@@ -252,7 +252,6 @@ class Cred3:
         exposure_prev = 0
         exposures = np.zeros(iterations)
         dists = np.zeros(iterations)
-        self.start()
 
         for i in range(iterations):
             exposure = self.config["exposure"]

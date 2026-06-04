@@ -11,6 +11,7 @@ import numpy as np
 camera = cred3.Cred3()
 camera.connect()
 camera.configure(bias_type = "Adaptive")
+camera.start()
 
 print(camera.config["exposure"])
 image_1 = camera.frame()
