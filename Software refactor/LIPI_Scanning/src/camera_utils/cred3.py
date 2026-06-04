@@ -111,7 +111,7 @@ class Cred3:
 
         print("Camera connected.")
         self.connected = True
-        FliSdk_V2.ImageProcessing.EnableAutoClip(self.context, -1, False)
+        FliSdk_V2.ImageProcessing.EnableAutoClip(self.context, -1, False) #make sure autoclip is disabled
         print("Auto-clip disabled.")
 
     def disconnect(self):
@@ -354,15 +354,17 @@ class Cred3:
         print(f"Old {setting}: {value_old}, New {setting}: {value_new}")
         if cfg_key is not None:
             self.config[cfg_key] = value_new
-
+    
     def _set_fps(self, fps: float):
+        self._toggle_granularity(False)
         self._set_value(
             setting = "FPS",
             cfg_key = "fps",
             setter = lambda: FliSdk_V2.FliSerialCamera.SetFps(self.context, fps),
             getter = lambda: FliSdk_V2.FliSerialCamera.GetFps(self.context)
         )
-
+        self._toggle_granularity(True)
+    
     def _set_exposure(self, exposure: float):
         if exposure > 1000/self.config["fps"]:
             raise ValueError("Exposure too high")
@@ -386,7 +388,12 @@ class Cred3:
         print(f"{setting} state changed from {state_old} to {state_new}")
         if cfg_key is not None:
             self.config[cfg_key] = state_new
-
+    def _toggle_granularity(self, state: bool):
+        #Setting FPS Granularity. Remember to enable before setting exposure (to avoid periodic exposure variations)
+        return self._toggle("Bias Correction",
+                     setter = lambda: FliSdk_V2.FliCredThree.EnableTintGranularity(self.context, state),
+                    getter = lambda: FliSdk_V2.FliCredThree.GetTintGranularityState(self.context)
+                     )
     def _toggle_bias(self, state: bool):
         return self._toggle("Bias Correction",
                      setter=lambda: FliSdk_V2.FliSerialCamera.EnableBias(self.context, state),
