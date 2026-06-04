@@ -224,7 +224,7 @@ class Cred3:
             raise ValueError("Error while building flat.")
         print("Flat built successfully")
 
-    def auto_expose(self, iterations=10, h1=0, w1=0, h2=None, w2=None):
+    def auto_expose(self, iterations=10, h1=1, w1=0, h2=None, w2=None):
         """
         Function to automatically set an appropriate exposure level for the camera.
         Returns:

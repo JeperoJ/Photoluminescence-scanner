@@ -10,7 +10,7 @@ import numpy as np
 
 camera = cred3.Cred3()
 camera.connect()
-camera.configure(bias_type = "Adaptive")
+camera.configure(bias_type = "Adaptive", conversion_gain="High")
 camera.start()
 
 print(camera.config["exposure"])
@@ -23,7 +23,7 @@ print(np.where(image_1==image_1.max()))
 bins = np.array(range(image_1.min(), image_1.max()+1))
 plt.hist(image_1.flatten(), bins, alpha=0.5, label="Before")
 camera.auto_expose()
-image_2 = camera.frame()
+image_2 = camera.frame()[1:,:]
 bins = np.array(range(image_2.min(), image_2.max()+1))
 plt.hist(image_2.flatten(), bins, alpha=0.5, label="After")
 plt.legend(loc="upper right")
