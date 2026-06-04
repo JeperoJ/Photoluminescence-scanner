@@ -390,9 +390,9 @@ class Cred3:
             self.config[cfg_key] = state_new
     def _toggle_granularity(self, state: bool):
         #Setting FPS Granularity. Remember to enable before setting exposure (to avoid periodic exposure variations)
-        return self._toggle("Bias Correction",
+        return self._toggle("Granularity",
                      setter = lambda: FliSdk_V2.FliCredThree.EnableTintGranularity(self.context, state),
-                    getter = lambda: FliSdk_V2.FliCredThree.GetTintGranularityState(self.context)
+                     getter = lambda: FliSdk_V2.FliCredThree.GetTintGranularityState(self.context)
                      )
     def _toggle_bias(self, state: bool):
         return self._toggle("Bias Correction",
