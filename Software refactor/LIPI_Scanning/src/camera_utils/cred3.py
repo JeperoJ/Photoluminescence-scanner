@@ -233,6 +233,8 @@ class Cred3:
 
         """
         Notes
+        So, h1 is 1 by default and should no be put lower. Because camera stores triggers there, that needs to be discarded.
+        
         Think that max and min are 2**14 and 0 respectively.
         Could be nice to look at a histogram of the picture
         Can always make it more complicated in the future. Rudimentary approach for today
