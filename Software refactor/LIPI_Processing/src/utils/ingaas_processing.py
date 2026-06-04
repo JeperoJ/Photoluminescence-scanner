@@ -28,6 +28,17 @@ def load_raw_image(file_path, width, height, images=None, offset_images=0):
     image = image.reshape((num_images, height, width))
     #image= int16_2_uint16(image)
     return image
+
+def histogram(image):
+    """
+    Make a histogram of the given image
+    Args:
+        image: 14 bit image in any data format
+
+    Returns:
+
+    """
+
 def crop_image(image):
     """Crop the image to only the columns with data."""
     # Find the first and last column with non-zero pixel values

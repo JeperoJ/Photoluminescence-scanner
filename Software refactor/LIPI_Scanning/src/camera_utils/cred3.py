@@ -178,14 +178,24 @@ class Cred3:
 
         self.configured = True
 
+    def frame(self):
+        """
+        Get the latest frame from the camera.
+        Returns:
+
+        """
+        FliSdk_V2.GetRawImageAsNumpyArray(self.context, index=-1)
+
     def start_recording(self):
         if not self.is_ready():
             raise ValueError("Camera is not ready. Please do setup before recording.")
+        self.start()
         self._start_frame = FliSdk_V2.GetBufferFilling(self.context)
 
     def stop_recording(self):
         if self._start_frame is None:
             raise ValueError("Recording was never started.")
+        self.stop()
         self._end_frame = FliSdk_V2.GetBufferFilling(self.context)
 
 
@@ -197,7 +207,6 @@ class Cred3:
             self.stop_recording()
 
         FliSdk_V2.SaveBuffer(self.context, filepath, self._start_frame, self._end_frame)
-
     
     def build_bias(self):
         print("Building bias image")
@@ -213,6 +222,47 @@ class Cred3:
         if not res:
             raise ValueError("Error while building flat.")
         print("Flat built successfully")
+
+    def auto_expose(self, iterations=10):
+        """
+        Function to automatically set an appropriate exposure level for the camera.
+        Returns:
+
+        """
+
+        """
+        Notes
+        Think that max and min are 2**14 and 0 respectively.
+        Could be nice to look at a histogram of the picture
+        Can always make it more complicated in the future. Rudimentary approach for today
+    
+        Possible future features:
+        Percentage exposure - Make it so outliers can be cut
+        Area exposure - Select an image area, exposure is done only for that area
+        Multiple image average
+        
+        Pseudo code
+        1. Get image - To Be Implemented
+        2. Calculate "statistics" - Mean, variance, percentage at max and min
+        3. Adjust exposure "an appropriate amount" - Simple binary search to start maybe?
+        
+        exposure_prev = 0
+        exposure = 0
+        exposures = []
+        dists = []
+        
+        while True:
+            exposure=self.config["exposure"]
+            exposures.append(exposure)
+            image = self.frame()
+            dist = 2**14 - image.max()
+            dists.append(dist)
+            change=(exposure-exposure_prev)/2)
+            if dist >= 0:
+                
+                
+        """
+
 
     # def _BuildNUCBias_legacy(self, frames=256):
     #     """
