@@ -10,7 +10,7 @@ import numpy as np
 
 camera = cred3.Cred3()
 camera.connect()
-camera.configure(bias_type = "Adaptive", conversion_gain="High", fps=50)
+camera.configure(bias_type = "Adaptive", conversion_gain="High", fps=50, exposure=0.01)
 camera.start()
 
 print(camera.config["exposure"])
