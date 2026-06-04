@@ -52,7 +52,10 @@ class Gantry():
         return ports
 
 
-    def connect(self, device):
+    def connect(self, device=None):
+        if device is None:
+            ports = self.get_ports()
+            device = ports[[port.serial_number for port in ports].index("0400D018AF3D08A05C82F1D8F50020C0")].device #Makes list of serial numbers, gets the index of the correct serial number, selects the corresponding port, finally gets that device
         gcode_handler = gCodeHandler.GCodeHandler(device)
         gcode_handler.connect()
         self.handler = gcode_handler

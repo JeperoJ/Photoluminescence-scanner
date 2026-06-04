@@ -1,6 +1,7 @@
 import sys
 import os
 from typing import Literal
+import numpy as np
 
 fli_path = os.path.abspath(os.path.join(os.getenv('FLISDK_DIR'), "Python/lib"))
 if fli_path not in sys.path:
@@ -180,11 +181,11 @@ class Cred3:
 
     def frame(self):
         """
-        Get the latest frame from the camera.
+        Get the latest frames from the camera.
         Returns:
 
         """
-        FliSdk_V2.GetRawImageAsNumpyArray(self.context, index=-1)
+        return FliSdk_V2.GetRawImageAsNumpyArray(self.context, index=-1)
 
     def start_recording(self):
         if not self.is_ready():
@@ -223,7 +224,7 @@ class Cred3:
             raise ValueError("Error while building flat.")
         print("Flat built successfully")
 
-    def auto_expose(self, iterations=10):
+    def auto_expose(self, iterations=10, h1=0, w1=0, h2=None, w2=None):
         """
         Function to automatically set an appropriate exposure level for the camera.
         Returns:
@@ -238,31 +239,36 @@ class Cred3:
     
         Possible future features:
         Percentage exposure - Make it so outliers can be cut
-        Area exposure - Select an image area, exposure is done only for that area
         Multiple image average
         
         Pseudo code
         1. Get image - To Be Implemented
         2. Calculate "statistics" - Mean, variance, percentage at max and min
         3. Adjust exposure "an appropriate amount" - Simple binary search to start maybe?
-        
-        exposure_prev = 0
-        exposure = 0
-        exposures = []
-        dists = []
-        
-        while True:
-            exposure=self.config["exposure"]
-            exposures.append(exposure)
-            image = self.frame()
-            dist = 2**14 - image.max()
-            dists.append(dist)
-            change=(exposure-exposure_prev)/2)
-            if dist >= 0:
+                
                 
                 
         """
+        exposure_prev = 0
+        exposures = np.zeros(iterations)
+        dists = np.zeros(iterations)
 
+        for i in range(iterations):
+            exposure = self.config["exposure"]
+            exposures[i] = exposure
+            image = self.frame()[h1:h2, w1:w2]
+            print(image.shape)
+            dist = 2 ** 14 - image.max()
+            dists[i] = dist
+            change = abs(exposure - exposure_prev)/2
+            if dist > 0:
+                self._set_exposure(exposure+change)
+            else:
+                self._set_exposure(exposure-change)
+            exposure_prev = exposure
+
+        i = np.where(dists == dists[dists != 0].min())
+        self._set_exposure(np.mean(exposures[i], dtype=np.float64))
 
     # def _BuildNUCBias_legacy(self, frames=256):
     #     """
