@@ -258,7 +258,6 @@ class Cred3:
             exposure = self.config["exposure"]
             exposures[i] = exposure
             image = self.frame()[h1:h2, w1:w2]
-            print(image.shape)
             dist = 2 ** 14 - image.max()
             dists[i] = dist
             change = abs(exposure - exposure_prev)/2
