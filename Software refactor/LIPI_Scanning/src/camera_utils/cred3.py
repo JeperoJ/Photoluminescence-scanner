@@ -160,7 +160,7 @@ class Cred3:
             config_dict = self._config_default | config_dict
 
         for key, value in config_dict.items():
-            print(key)
+            #print(key)
             if key not in self._config_default:
                 raise ValueError(f"Invalid setting {key}. Valid settings are {self._config_default.keys()}")
             elif key == "fps":
@@ -252,6 +252,7 @@ class Cred3:
         exposure_prev = 0
         exposures = np.zeros(iterations)
         dists = np.zeros(iterations)
+        self.start()
 
         for i in range(iterations):
             exposure = self.config["exposure"]
