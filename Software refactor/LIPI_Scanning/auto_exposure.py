@@ -14,7 +14,7 @@ camera.configure(bias_type = "Adaptive")
 camera.start()
 
 print(camera.config["exposure"])
-image_1 = camera.frame()
+image_1 = camera.frame()[1:,:]
 print(image_1.shape)
 print(image_1.max())
 print(image_1.min())
