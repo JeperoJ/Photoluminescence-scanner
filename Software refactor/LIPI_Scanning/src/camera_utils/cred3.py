@@ -55,6 +55,7 @@ class Cred3:
             "flat_correction": True,
             "conversion_gain": "Medium",
             "anti_blooming": True,
+            "focal_length": 6
         }
         self._config_functions = {
             "fps": self._set_fps,
@@ -92,16 +93,16 @@ class Cred3:
         """
 
         if camera is None:
-            print(self.list())
+            #print(self.list())
             camera = self.list()[0]
 
         response = FliSdk_V2.SetCamera(self.context, camera)
         if not response:
             raise ValueError(f"Camera could not be set. Got response {response}")
 
-        res = FliSdk_V2.IsCredThree(self.context)
-        print(res)
-        #if not res:
+        #res = FliSdk_V2.IsCredThree(self.context)
+        #print(res)
+        # if not res:
         #    raise ValueError(f"Camera is wrong type. This implementation is made exclusively for the FLI CRED-3.")
 
         FliSdk_V2.SetMode(self.context, FliSdk_V2.Mode.Full)
@@ -129,17 +130,17 @@ class Cred3:
         if not self.connected:
             raise ValueError("Class instance not connected to a camera. Run connect function first.")
         FliSdk_V2.Start(self.context)
-        print(FliSdk_V2.FliCred.GetStatus(self.context))
+        FliSdk_V2.FliCred.GetStatus(self.context)
         
     def stop(self):
         FliSdk_V2.Stop(self.context)
 
     def is_ready(self):
-        ready = True
-        ready = ready and self.connected
-        ready = ready and self.configured
+        ready = True # Default
+        ready = ready and self.connected # Is it connected
+        ready = ready and self.configured # Is it configured
         if self.config["bias_type"] == "Manual":
-            ready = ready and self.calibrated
+            ready = ready and self.calibrated # If needed, has a dark frame been made
         return ready
 
     def configure(self, config_dict=None, **settings):
@@ -158,7 +159,7 @@ class Cred3:
             config_dict = settings
 
         if not self.configured:
-            config_dict = self._config_default | config_dict
+            config_dict = self._config_default | config_dict #Python always select elements from second dictionary. This means that any keyword in both will always have the user value, and any only in default the default value
 
         for key, value in config_dict.items():
             #print(key)
@@ -255,11 +256,14 @@ class Cred3:
         exposure_prev = 0
         exposures = np.zeros(iterations)
         dists = np.zeros(iterations)
+        image_old = None
 
-        for i in range(iterations):
+        i = 0
+        while True:
             exposure = self.config["exposure"]
             exposures[i] = exposure
             image = self.frame()[h1:h2, w1:w2]
+
             dist = 2 ** 14 - image.max()
             dists[i] = dist
             change = abs(exposure - exposure_prev)/2
@@ -268,9 +272,13 @@ class Cred3:
             else:
                 self._set_exposure(exposure-change)
             exposure_prev = exposure
+            image_old = image
+            i+=1
+            if i >= iterations:
+                break
 
-        i = np.where(dists == dists[dists != 0].min())
-        self._set_exposure(np.mean(exposures[i], dtype=np.float64))
+        j = np.where(dists == dists[dists != 0].min()) #Select all the smallest indices
+        self._set_exposure(np.mean(exposures[j], dtype=np.float64))
 
     # def _BuildNUCBias_legacy(self, frames=256):
     #     """

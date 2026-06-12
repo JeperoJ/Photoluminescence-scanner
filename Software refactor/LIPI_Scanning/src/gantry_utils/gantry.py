@@ -31,7 +31,8 @@ class Gantry():
             "height_lower" : 0,
             "speed" : 5000,
             "lightbar_angle": 30,
-            "lightbar_height": 0
+            "lightbar_height": 0,
+            "heigh_camera": 1045
         }
     def close(self):
         if self.connected:
@@ -69,7 +70,7 @@ class Gantry():
             config_dict = settings
 
         if not self.configured:
-            config_dict = self._config_default | config_dict
+            config_dict = self._config_default | config_dict #Python always select elements from second dictionary. This means that any keyword in both will always have the user value, and any only in default the default value
 
         for key,value in config_dict.items():
             print(key)

@@ -16,6 +16,10 @@ class Scanner:
         self.config = {}
         self._config_default = {
             "offset" : 100,
+            "focal_length" : 6,
+            "lens_name" : "Bob",
+            "filter_stack" : "Undefined",
+            "modulation_freq" : 50
         }
         self.system_config = {
             "general" : self.config,
@@ -32,7 +36,7 @@ class Scanner:
             config_dict = settings
 
         if not self.configured:
-            config_dict = self._config_default | config_dict
+            config_dict = self._config_default | config_dict #Python always select elements from second dictionary. This means that any keyword in both will always have the user value, and any only in default the default value
 
         for key, value in config_dict.items():
             print(key)
