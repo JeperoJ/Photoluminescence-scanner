@@ -253,6 +253,12 @@ class Cred3:
                 
                 
         """
+        if not self.is_ready():
+            raise ValueError("Camera is not ready. Please do full setup before auto exposure.")
+
+        if h1 < 1:
+            raise ValueError("Variable h1 must be greater than 0. The Cred 3 stores triggers in the first line of the image.")
+
         exposure_prev = 0
         exposures = np.zeros(iterations)
         dists = np.zeros(iterations)

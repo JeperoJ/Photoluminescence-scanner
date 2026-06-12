@@ -21,14 +21,18 @@ print("Welcome!")
 
 #Gantry connecting
 print("Setting up gantry")
-available_ports = scan_robot.robot.get_ports()
-print("Available ports:")
-#choose between available ports
-for i in range(len(available_ports)): print("port {}: {}".format(i, available_ports[i]))
-t=input("Choose port (typically shows board as USB serial device): ")
-port=available_ports[int(t)].device
-print(port)
-scan_robot.robot.connect(port)
+t = input("Do auto connect? (y/[n]):")
+if t == "y":
+    scan_robot.robot.connect()
+else:
+    available_ports = scan_robot.robot.get_ports()
+    print("Available ports:")
+    #choose between available ports
+    for i in range(len(available_ports)): print("port {}: {}".format(i, available_ports[i]))
+    t=input("Choose port (typically shows board as USB serial device): ")
+    port=available_ports[int(t)].device
+    print(port)
+    scan_robot.robot.connect(port)
 print("Gantry connected!")
 
 #Camera connecting
@@ -53,6 +57,21 @@ print("Gantry calibrated!")
 if scan_robot.camera.config["bias_type"] == "Manual":
     input("Camera calibration. Cover camera, and press enter when ready...")
     scan_robot.camera.build_bias()
+
+#Auto Exposure
+t = input("Do auto exposure? (y/[n]):")
+if t == "y":
+    move = False
+    t = input("Move for auto exposure? (y/[n]):")
+    if t == "y":
+        move = True
+    input("Remove camera cover, and turn on lightbar if desired. Press enter when ready...")
+    scan_robot.auto_expose(iterations=10, move=move, position=1000)
+    if scan_robot.camera.config["bias_type"] == "Manual":
+        input("Camera re-calibration. Cover camera, and press enter when ready...")
+        scan_robot.camera.build_bias()
+
+
 
 #Specify data path and scan
 path = filedialog.askdirectory()
