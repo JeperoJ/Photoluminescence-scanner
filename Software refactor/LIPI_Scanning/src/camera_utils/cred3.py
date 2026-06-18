@@ -271,7 +271,7 @@ class Cred3:
             dist = 2 ** 14 - image.max()
             dists[i] = dist
             change = abs(exposure - exposure_prev)/2
-            if dist > 0:
+            if dist > 100:
                 self._set_exposure(exposure+change)
             else:
                 self._set_exposure(exposure-change)
