@@ -54,8 +54,7 @@ class Cred3:
             "bias_type": "Manual",
             "flat_correction": True,
             "conversion_gain": "Medium",
-            "anti_blooming": True,
-            "focal_length": 6
+            "anti_blooming": True
         }
         self._config_functions = {
             "fps": self._set_fps,
