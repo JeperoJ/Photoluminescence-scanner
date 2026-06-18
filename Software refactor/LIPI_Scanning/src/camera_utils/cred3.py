@@ -226,7 +226,7 @@ class Cred3:
             raise ValueError("Error while building flat.")
         print("Flat built successfully")
 
-    def auto_expose(self, iterations=10, h1=1, w1=0, h2=None, w2=None):
+    def auto_expose(self, iterations=10, h1=2, w1=2, h2=-2, w2=-2):
         """
         Function to automatically set an appropriate exposure level for the camera.
         Returns:
@@ -235,7 +235,8 @@ class Cred3:
 
         """
         Notes
-        So, h1 is 1 by default and should no be put lower. Because camera stores triggers there, that needs to be discarded.
+        Per Thøgers suggestion, the outer 2 px are discared by default. Changes should respect this boundary.
+        Negative values obey usual numpy logic
         
         Think that max and min are 2**14 and 0 respectively.
         Could be nice to look at a histogram of the picture
@@ -256,13 +257,11 @@ class Cred3:
         if not self.is_ready():
             raise ValueError("Camera is not ready. Please do full setup before auto exposure.")
 
-        if h1 < 1:
-            raise ValueError("Variable h1 must be greater than 0. The Cred 3 stores triggers in the first line of the image.")
+        self.start()
 
         exposure_prev = 0
         exposures = np.zeros(iterations)
         dists = np.zeros(iterations)
-        image_old = None
 
         i = 0
         while True:
@@ -278,7 +277,6 @@ class Cred3:
             else:
                 self._set_exposure(exposure-change)
             exposure_prev = exposure
-            image_old = image
             i+=1
             if i >= iterations:
                 break

@@ -74,12 +74,12 @@ class Scanner:
         """
         if move:
             #Error catching
-            if not self.robot.calibrated:
-                raise ValueError("Robot is not calibrated. Please calibrate first.")
-            if position + self.config["offset"] > self.robot.config["length_upper"]:
-                raise ValueError("Position would exceed length of upper axis")
-            if position > self.robot.config["length_lower"]:
-                raise ValueError("Position would exceed length of lower axis")
+            #if not self.robot.calibrated:
+            #    raise ValueError("Robot is not calibrated. Please calibrate first.")
+            #if position + self.config["offset"] > self.robot.config["length_upper"]:
+            #    raise ValueError("Position would exceed length of upper axis")
+            #if position > self.robot.config["length_lower"]:
+            #    raise ValueError("Position would exceed length of lower axis")
 
             self.robot.handler.set_position(position+self.config["offset"], position)
             self.robot.handler.wait()
