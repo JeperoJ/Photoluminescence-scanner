@@ -225,34 +225,23 @@ class Cred3:
             raise ValueError("Error while building flat.")
         print("Flat built successfully")
 
-    def auto_expose(self, iterations=10, init_exposure = None, h1=2, w1=2, h2=-2, w2=-2):
+    def auto_expose(self, iterations=10, init_exposure=None, h1=2, w1=2, h2=-2, w2=-2):
         """
-        Function to automatically set an appropriate exposure level for the camera.
+        Automatically set an appropriate exposure level for the camera.
+        
+        Adjusts exposure to get the maximum pixel value as close as possible to the 14-bit max (16383).
+        Handles bias correction artifacts by clipping pixel values to the valid 14-bit range [0, 16383].
+        
+        Args:
+            iterations: Maximum number of exposure adjustment iterations
+            init_exposure: Initial exposure value to start with (optional)
+            h1, w1, h2, w2: ROI slice indices (default: exclude outer 2 pixels per suggestion)
+        
         Returns:
-
+            None (sets optimal exposure level in self.config)
         """
-
-        """
-        Notes
-        Per Thøgers suggestion, the outer 2 px are discared by default. Changes should respect this boundary.
-        Negative values obey usual numpy logic
+        BIT_DEPTH_14 = 2 ** 14 - 1  # 16383: maximum 14-bit value
         
-        Think that max and min are 2**14 and 0 respectively.
-        Could be nice to look at a histogram of the picture
-        Can always make it more complicated in the future. Rudimentary approach for today
-    
-        Possible future features:
-        Percentage exposure - Make it so outliers can be cut
-        Multiple image average
-        
-        Pseudo code
-        1. Get image - To Be Implemented
-        2. Calculate "statistics" - Mean, variance, percentage at max and min
-        3. Adjust exposure "an appropriate amount" - Simple binary search to start maybe?
-                
-                
-                
-        """
         if not self.is_ready():
             raise ValueError("Camera is not ready. Please do full setup before auto exposure.")
 
@@ -270,25 +259,42 @@ class Cred3:
             exposure = self.config["exposure"]
             exposures[i] = exposure
             image = self.frame()[h1:h2, w1:w2]
+            
+            # Clip pixel values to valid 14-bit range [0, 16383]
+            # This handles bias correction artifacts that may produce out-of-range values
+            image_clipped = np.clip(image, 0, BIT_DEPTH_14)
+            max_pixel = image_clipped.max()
 
-            print(image.max())
-            dist = 2 ** 14 - image.max()
-            print(dist)
+            # Calculate distance from max pixel to 14-bit maximum
+            dist = BIT_DEPTH_14 - max_pixel
+            
+            print(f"Iteration {i}: Exposure={exposure:.4f}, Max pixel={max_pixel}, Distance to max={dist}")
             dists[i] = dist
-            change = abs(exposure - exposure_prev)/2
+            
+            change = abs(exposure - exposure_prev) / 2
+            
+            # If too far from max (underexposed), increase exposure
             if dist > 100:
-                print("Increasing")
-                self._set_exposure(exposure+change)
+                print("  -> Underexposed, increasing exposure")
+                self._set_exposure(exposure + change)
             else:
-                print("Decreasing")
-                self._set_exposure(exposure-change)
+                print("  -> Close to target, decreasing exposure")
+                self._set_exposure(exposure - change)
+            
             exposure_prev = exposure
-            i+=1
+            i += 1
             if i >= iterations:
                 break
 
-        j = np.where(dists == dists[dists != 0].min()) #Select all the smallest indices
-        self._set_exposure(np.mean(exposures[j], dtype=np.float64))
+        # Find the exposure that gave the best result (smallest distance to max)
+        # Filter out any zero entries from incomplete iterations
+        valid_dists = dists[dists != 0] if np.any(dists != 0) else dists
+        best_idx = np.where(dists == valid_dists.min())[0]
+        
+        # Use mean of best exposures if multiple converged to same distance
+        optimal_exposure = np.mean(exposures[best_idx], dtype=np.float64)
+        print(f"\nOptimal exposure selected: {optimal_exposure:.4f}")
+        self._set_exposure(optimal_exposure)
 
     # def _BuildNUCBias_legacy(self, frames=256):
     #     """
