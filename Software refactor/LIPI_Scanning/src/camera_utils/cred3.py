@@ -225,7 +225,7 @@ class Cred3:
             raise ValueError("Error while building flat.")
         print("Flat built successfully")
 
-    def auto_expose(self, iterations=10, h1=2, w1=2, h2=-2, w2=-2):
+    def auto_expose(self, iterations=10, init_exposure = None, h1=2, w1=2, h2=-2, w2=-2):
         """
         Function to automatically set an appropriate exposure level for the camera.
         Returns:
@@ -262,18 +262,25 @@ class Cred3:
         exposures = np.zeros(iterations)
         dists = np.zeros(iterations)
 
+        if init_exposure is not None:
+            self._set_exposure(init_exposure)
+
         i = 0
         while True:
             exposure = self.config["exposure"]
             exposures[i] = exposure
             image = self.frame()[h1:h2, w1:w2]
 
+            print(image.max())
             dist = 2 ** 14 - image.max()
+            print(dist)
             dists[i] = dist
             change = abs(exposure - exposure_prev)/2
             if dist > 100:
+                print("Increasing")
                 self._set_exposure(exposure+change)
             else:
+                print("Decreasing")
                 self._set_exposure(exposure-change)
             exposure_prev = exposure
             i+=1
