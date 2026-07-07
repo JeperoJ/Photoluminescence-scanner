@@ -1,5 +1,29 @@
 import numpy as np
 import scipy
+import tifffile
+from . import ingaas_processing as ip
+
+def load_scan(source, width, height, crop_rows=None, cal_path=None):
+    print("Loading scan")
+    if source.endswith('.raw'):
+        print("Processing a .raw file")
+        images = ip.load_raw_image(source, width, height)
+    elif source.endswith('.tiff'):
+        print("Processing a .tiff file")
+        images = tifffile.imread(source)
+    else:
+        raise ValueError("Unsupported file format. Please provide a .tiff or .raw file.")
+    print(images.shape)
+    if cal_path is not None:
+        print("Undistorting")
+        K, P, DIM = ip.load_calibration(cal_path)
+        images = ip.undistort(images, K, P, DIM)
+        print(images.shape)
+    if crop_rows is not None:
+        print("Cropping")
+        print(crop_rows)
+        images = images[:,crop_rows[0]:crop_rows[1],:]
+    return images
 
 def get_phase(x, f, f_s, debug_out=False):
     '''
@@ -42,7 +66,7 @@ def get_phase(x, f, f_s, debug_out=False):
 
     return phase
 
-def get_extrema(f,phase,f_s,N):
+def get_extrema_window(f,phase,f_s,N):
     '''
     Estimate the extrema points of a discrete signal
 
@@ -76,28 +100,58 @@ def get_extrema(f,phase,f_s,N):
     mask = np.all([peaks < N, valleys < N], axis=0)
     return peaks[mask], valleys[mask]
 
-def stitch(scan, wlen, skip, f_m, fps):
-    #Choice to use either steps or window length as hyperparameter. Think window length makes the most sense, but unsure.
-    #Probably need skip for certain scans.
-    signal = np.sum(scan, axis=(1,2))
+def get_extrema_scan(scan, window_length, skip, f_m, fps):
+    # Choice to use either steps or window length as hyperparameter. Think window length makes the most sense, due to consistency
+    #  between scans. Unsure though.
+    # Probably need skip for certain scans.
+    signal = np.sum(scan, axis=(1, 2))
     N = len(signal)
 
-    min_steps = np.ceil(N / wlen).astype(np.int32)
+    min_steps = np.ceil(N / window_length).astype(np.int32)
     steps = 10 + min_steps
-    step_size = (N - skip - wlen) / (steps - 1)
+    step_size = (N - skip - window_length) / (steps - 1)
 
     peaks = np.empty(0, dtype=np.int32)
     valleys = np.empty(0, dtype=np.int32)
 
     for i in range(steps):
         w_start = round(i * step_size) + skip
-        w_end = w_start + wlen
+        w_end = w_start + window_length
         w_start_next = round((i + 1) * step_size) + skip
         if w_end + 10 > N:
             w_start_next = w_end
 
         window = signal[w_start:w_end]
-        phase, f_out = get_phase(window, f_m, fps)
-        peaks_i, valleys_i = get_extrema(f_m, phase, fps, w_start_next - w_start)
+        phase = get_phase(window, f_m, fps)
+        peaks_i, valleys_i = get_extrema_window(f_m, phase, fps, w_start_next - w_start)
         peaks = np.append(peaks, peaks_i + w_start)
         valleys = np.append(valleys, valleys_i + w_start)
+
+    return peaks, valleys
+
+def SNR50(Img1, Img2, ImgBG, dB=False, profile=True):
+    K=np.sqrt(0.5)*((2/np.pi)**(-0.5))
+    top = 0.5 * (Img1+Img2-ImgBG)
+    bottom = np.abs(Img1-Img2)*K
+
+    snr = top.sum()/bottom.sum()
+    if dB:
+        snr = 20*np.log10(snr)
+    if profile:
+        return snr, top.sum(axis=1)/bottom.sum(axis=1)
+    else:
+        return snr
+
+def SNRAvg(ImgSig, ImgBG, dB=False):
+    K=np.sqrt(0.5)*((2/np.pi)**(-0.5))
+
+    set_1 = ImgSig[::2]
+    set_2 = ImgSig[1::2]
+    N = min(len(set_1), len(set_2))
+
+    top = np.sum(np.mean(ImgSig[:2*N]-ImgBG[:2*N], axis=0))
+    bottom = np.sum(np.abs(np.mean(set_1, axis=0)-np.mean(set_2, axis=0))*K)
+    snr = top/bottom
+    if dB:
+        snr = 20*np.log10(snr)
+    return snr

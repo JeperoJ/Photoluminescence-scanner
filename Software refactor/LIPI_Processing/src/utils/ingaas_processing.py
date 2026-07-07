@@ -298,11 +298,13 @@ def undistort(imageArr,K,D,dim=(640,512)):
     AssertionError: If the aspect ratio of the input image does not match the aspect ratio of the calibration dimensions.
     """
 
+    #TODO:Maybe improve this to be parallel
+
     undistorted_imgs=[]
     dim1 = imageArr[0].shape[:2][::-1]
     assert dim1[0]/dim1[1] == dim[0]/dim[1], "Image to undistort needs to have same aspect ratio as the ones used in calibration"
     map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, dim, cv2.CV_16SC2)
     for image in imageArr:
        undistorted_imgs.append(cv2.remap(image, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT))
-    return undistorted_imgs
+    return np.array(undistorted_imgs)
 
