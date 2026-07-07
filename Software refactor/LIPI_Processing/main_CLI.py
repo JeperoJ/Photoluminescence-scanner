@@ -142,7 +142,8 @@ for scan_dir in scans:
 
     #Images full
     def saver(x, name):
-        plt.imsave(os.path.join(scan_dir, f"{name}.png"), x, cmap="gray", vmin=np.min(x), vmax=np.max(x))
+        plt.imsave(os.path.join(scan_dir, f"{name}.png"), x, cmap="gray", vmin=np.min(x), vmax=np.max(x)) #Pretty image
+        np.savetxt(os.path.join(scan_dir, f"{name}.csv"), x, delimiter=",") #Usable data
 
     saver(Sig1, "Sig1")
     saver(Sig2, "Sig2")
