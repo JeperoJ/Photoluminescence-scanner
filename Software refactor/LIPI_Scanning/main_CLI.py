@@ -21,18 +21,18 @@ print("Welcome!")
 
 #Gantry connecting
 print("Setting up gantry")
-t = input("Do auto connect? (y/[n]):")
-if t == "y":
-    scan_robot.robot.connect()
-else:
-    available_ports = scan_robot.robot.get_ports()
-    print("Available ports:")
-    #choose between available ports
-    for i in range(len(available_ports)): print("port {}: {}".format(i, available_ports[i]))
-    t=input("Choose port (typically shows board as USB serial device): ")
-    port=available_ports[int(t)].device
-    print(port)
-    scan_robot.robot.connect(port)
+#t = input("Do auto connect? (y/[n]):")
+#if t == "y":
+#    scan_robot.robot.connect()
+#else:
+available_ports = scan_robot.robot.get_ports()
+print("Available ports:")
+#choose between available ports
+for i in range(len(available_ports)): print("port {}: {}".format(i, available_ports[i]))
+t=input("Choose port (typically shows board as USB serial device): ")
+port=available_ports[int(t)].device
+print(port)
+scan_robot.robot.connect(port)
 print("Gantry connected!")
 
 #Camera connecting
@@ -75,5 +75,7 @@ if t == "y":
 
 #Specify data path and scan
 path = filedialog.askdirectory()
-input("Press enter when ready for scan. Enable lightbar and remove camera cover.")
-scan_robot.scan(path)
+input("Scanner will now do setup. Please keep hands clear of gantry area. Press enter when ready...")
+scan_robot.setup(path)
+input("Scanner ready. Enable lightbar and remove camera cover, and keep hands clear of gantry area. Press enter when ready...")
+scan_robot.scan()

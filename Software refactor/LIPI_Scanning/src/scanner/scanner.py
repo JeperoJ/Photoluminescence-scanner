@@ -9,6 +9,7 @@ class Scanner:
     def __init__(self):
         #TODO: Figure out what actually makes sense to do with the gantry / robot
         self.configured = False
+        self.ready = False
 
         self.camera = cred3.Cred3()
         self.robot = gantry.Gantry()
@@ -26,6 +27,9 @@ class Scanner:
             "camera" : self.camera.config,
             "robot" : self.robot.config,
         }
+
+        self.length = None
+        self.distance = None
 
     def __del__(self):
         self.camera.close()
@@ -89,10 +93,29 @@ class Scanner:
             self.robot.handler.wait()
 
 
+    def setup(self, savePath):
+        if not self.configured:
+            raise ValueError("Cannot do setup before configuration finished.")
+        self.directory = os.path.join(savePath, datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
+        os.mkdir(self.directory)
+        self.length = min(self.robot.config["length_upper"], self.robot.config["length_lower"] + self.config["offset"])
+
+        buffer_size_images = int(2 * self.camera.config["fps"] * self.length / (self.robot.config["speed"] / 60))
+        print(f"Buffer size images: {buffer_size_images}")
+        FliSdk_V2.SetBufferSizeInImages(self.camera.context, buffer_size_images)
+        print(f"Context buffer size: {FliSdk_V2.GetImagesCapacity(self.camera.context)}")
+        # In case not started, start camera buffer filling
+        self.camera.start()
+        # Set offset position and wait
+        self.robot.handler.set_position(self.config["offset"], 0)  # Set offset (to see panel before the light bar)
+        self.robot.handler.wait()
+        self.ready = True
 
 
-    def scan(self, savePath):
+    def scan(self):
         """
+        !!Notes currently outdates due to restructuring.
+
         Perform a continuous scan of a PV panel using a gantry system and save the acquired images.
         Parameters:
             gcode_handler (object): The handler object for controlling the gantry system.
@@ -113,31 +136,23 @@ class Scanner:
             Because we use absolute positioning, it does this, by moving the UA to a position "x", and the LA to a position "x-offset".
             Therefore, the largest this value "x" can be, is the smallest of the length of the UA and the LA-offset.
         """
-        directory = os.path.join(savePath, datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
-        os.mkdir(directory)
-        scan_name = f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.raw"
-        length = min(self.robot.config["length_upper"], self.robot.config["length_lower"]+self.config["offset"])
 
-        buffer_size_images = int(2 * self.camera.config["fps"] * length / (self.robot.config["speed"] / 60))
-        print(f"Buffer size images: {buffer_size_images}")
-        FliSdk_V2.SetBufferSizeInImages(self.camera.context, buffer_size_images)
-        print(f"Context buffer size: {FliSdk_V2.GetImagesCapacity(self.camera.context)}")
         #nImages = int(length / (self.robot.config["speed"] / 60) * frameRate)
-        #In case not started, start camera buffer filling
-        self.camera.start()
-        #Set offset position and wait
-        self.robot.handler.set_position(self.config["offset"], 0)  # Set offset (to see panel before the light bar)
-        self.robot.handler.wait()
+        if not self.ready:
+            raise ValueError("Setup function must be called before scanning")
+
         #Store current buffer filling, for later saving
         self.camera.start_recording()
         #Set end position and wait for movement to be finished
-        self.robot.handler.set_position(length, length - self.config["offset"])
+        self.robot.handler.set_position(self.length, self.length - self.config["offset"])
         self.robot.handler.wait()
         #Stop camera, and get final buffer filling
         self.camera.stop_recording()
         #Save everything in between markers, as well as settings used
-        self.camera.save_recording(os.path.join(directory, scan_name))
-        self.save_config(os.path.join(directory, "config.toml"))
+        scan_name = f"scan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.raw"
+        self.camera.save_recording(os.path.join(self.directory, scan_name))
+        self.save_config(os.path.join(self.directory, "config.toml"))
+        open(os.path.join(self.directory, "notes.txt"), "w").close() #Create an empty notes file and close it. Cleanest without a restructuring to use pathlib (which could be preferred in the future, as it makes a lot of operations more readable)
 
 
 

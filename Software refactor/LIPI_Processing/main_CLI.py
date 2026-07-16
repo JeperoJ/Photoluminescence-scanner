@@ -128,7 +128,7 @@ for scan_dir in scans:
     #Save work
 
     #SNR full
-    SNR, profile = scp.SNR50(Sig1, Sig2, Bg, dB=False, profile=True)
+    SNR, profile = scp.SNR50(Sig1, Sig2, Bg, dB=False, profile=True) #LEGACY: Not a good measurement
     print(stitch.shape)
     SNR_test_full = np.mean(stitch[:,100:540])/np.std(stitch[:,0:75], ddof=1)
     print(f"SNR: {SNR}, SNRNew: {SNR_test_full}")

@@ -180,12 +180,16 @@ class Cred3:
 
         self.configured = True
 
-    def frame(self):
+    def frame(self, debug=False):
         """
         Get the latest frames from the camera.
         Returns:
 
         """
+        if not debug:
+            if not self.is_ready():
+                raise ValueError("Camera is not ready. Please finish setup before calling this function.")
+            self.start()
         return FliSdk_V2.GetRawImageAsNumpyArray(self.context, index=-1)
 
     def start_recording(self):
