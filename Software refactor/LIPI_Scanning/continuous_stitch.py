@@ -79,43 +79,9 @@ if __name__ == "__main__":
     #accumulator = rng.randint(low=2**14, dtype=np.int16, size=(300, 512, 640))
 
     # for image received callback
-    # cam = cred3.Cred3()
-    # cam.connect()
-    # cam.configure(fps=100, bias_type = "Adaptive")
-
-    #Numpy perf test
-    rng = np.random.RandomState(42)
-    roll_size = 50
-    window_size = 1000
-    roll_block = rng.randint(low=2**14, size=(roll_size, 512, 640))
-    test_buffer = rng.randint(low=2**14, size=(window_size-roll_size, 512, 640))
-    target = np.append(roll_block, test_buffer, axis=0)
-
-    #Test 1
-    test = np.append(rng.randint(low=2**14, size=(window_size-roll_size, 512, 640)), roll_block, axis=0)
-    ts = time.perf_counter()
-    test = np.roll(test, roll_size, axis=0)
-    te_roll = time.perf_counter()
-    test[roll_size:] = test_buffer
-    te_tot = time.perf_counter()
-    print(f"Test 1, Roll time: {te_roll - ts}, Total time: {te_tot-ts}, succesful: {np.all(test==target)}")
-
-    #Test 2
-    test = np.append(rng.randint(low=2 ** 14, size=(window_size - roll_size, 512, 640)), roll_block, axis=0)
-    ts = time.perf_counter()
-    test[0:roll_size] = test[-roll_size:]
-    te_roll = time.perf_counter()
-    test[roll_size:] = test_buffer
-    te_tot = time.perf_counter()
-    print(f"Test 2, Roll time: {te_roll - ts}, Total time: {te_tot - ts}, succesful: {np.all(test == target)}")
-
-    #Test 3
-    test = np.append(rng.randint(low=2 ** 14, size=(window_size - roll_size, 512, 640)), roll_block, axis=0)
-    ts = time.perf_counter()
-    test[:] = np.append(test[-roll_size:], test_buffer, axis=0)
-    te_tot = time.perf_counter()
-    print(f"Test 3, Total time: {te_tot - ts}, succesful: {np.all(test == target)}")
-
+    cam = cred3.Cred3()
+    cam.connect()
+    cam.configure(fps=100, bias_type = "Adaptive")
 
     #Tests
 
@@ -124,3 +90,6 @@ if __name__ == "__main__":
     # BufferTest1(cam.context, fps=1)
 
     #Test 2
+    BufferTest2(cam.context, fps=0, images=100)
+
+    #Test 3
