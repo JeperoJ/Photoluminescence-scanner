@@ -3,12 +3,12 @@ import scipy
 import tifffile
 from . import ingaas_processing as ip
 
-def load_scan(source, width, height, crop_rows=None, cal_path=None):
+def load_scan(source, width=640, height=512, crop_rows=None, cal_path=None, debug=False, parallel=True):
     print("Loading scan")
-    if source.endswith('.raw'):
+    if str(source).endswith('.raw'):
         print("Processing a .raw file")
         images = ip.load_raw_image(source, width, height)
-    elif source.endswith('.tiff'):
+    elif str(source).endswith('.tiff'):
         print("Processing a .tiff file")
         images = tifffile.imread(source)
     else:
@@ -17,7 +17,7 @@ def load_scan(source, width, height, crop_rows=None, cal_path=None):
     if cal_path is not None:
         print("Undistorting")
         K, P, DIM = ip.load_calibration(cal_path)
-        images = ip.undistort(images, K, P, DIM)
+        images = ip.undistort(images, K, P, DIM, debug=debug, parallel=parallel)
         print(images.shape)
     if crop_rows is not None:
         print("Cropping")

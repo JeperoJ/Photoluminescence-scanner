@@ -8,9 +8,10 @@ import numpy as np
 import cv2
 import os
 import sys
+from joblib import Parallel, delayed
+from numba import jit
 
-
-def load_raw_image(file_path, width, height, images=None, offset_images=0):
+def load_raw_image(file_path, width=640, height=512, images=None, offset_images=0):
     """Load a .RAW multi-image file."""
     if images is None:
         bytes = -1
@@ -38,6 +39,7 @@ def histogram(image):
     Returns:
 
     """
+    pass
 
 def crop_image(image):
     """Crop the image to only the columns with data."""
@@ -284,7 +286,7 @@ def load_calibration(calibration_file, flat_field=False):
     return K,D,DIM
     
 
-def undistort(imageArr,K,D,dim=(640,512)):
+def undistort(imageArr,K,D,dim=(640,512),debug=False,parallel=True):
     """
     Undistorts an array of images using the provided camera matrix and distortion coefficients.
     Parameters:
@@ -300,11 +302,18 @@ def undistort(imageArr,K,D,dim=(640,512)):
 
     #TODO:Maybe improve this to be parallel
 
+    if not debug:
+        dim1 = imageArr[0].shape[:2][::-1]
+        assert dim1[0] / dim1[1] == dim[0] / dim[1], "Image to undistort needs to have same aspect ratio as the ones used in calibration"
+
+    #print(imageArr.shape)
     undistorted_imgs=[]
-    dim1 = imageArr[0].shape[:2][::-1]
-    assert dim1[0]/dim1[1] == dim[0]/dim[1], "Image to undistort needs to have same aspect ratio as the ones used in calibration"
     map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, dim, cv2.CV_16SC2)
-    for image in imageArr:
-       undistorted_imgs.append(cv2.remap(image, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT))
+
+    if parallel:
+        undistorted_imgs = Parallel(n_jobs=-1, backend="threading")(delayed(cv2.remap)(image, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT) for image in imageArr)
+    else:
+        for image in imageArr:
+           undistorted_imgs.append(cv2.remap(image, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT))
     return np.array(undistorted_imgs)
 

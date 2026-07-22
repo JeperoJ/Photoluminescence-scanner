@@ -42,7 +42,7 @@ class Cred3:
         self.context = FliSdk_V2.Init()
         self.width = 640
         self.height = 512
-        self.connected = False
+        self._connected = False
         self.configured = False
         self.calibrated = False
 
@@ -77,7 +77,7 @@ class Cred3:
         self.close()
 
     def list(self):
-        if self.connected:
+        if self._connected:
             self.disconnect()
         FliSdk_V2.DetectGrabbers(self.context)
         return FliSdk_V2.DetectCameras(self.context)
@@ -111,7 +111,7 @@ class Cred3:
             raise ValueError(f"Error while updating SDK. Got response {response}")
 
         print("Camera connected.")
-        self.connected = True
+        self._connected = True
         FliSdk_V2.ImageProcessing.EnableAutoClip(self.context, -1, False) #make sure autoclip is disabled
         print("Auto-clip disabled.")
 
@@ -121,12 +121,12 @@ class Cred3:
         """
         self.stop()
         FliSdk_V2.Exit(self.context)
-        self.connected = False
+        self._connected = False
         self.calibrated = False
         self.context = FliSdk_V2.Init()
 
     def start(self):
-        if not self.connected:
+        if not self._connected:
             raise ValueError("Class instance not connected to a camera. Run connect function first.")
         FliSdk_V2.Start(self.context)
         FliSdk_V2.FliCred.GetStatus(self.context)
@@ -136,7 +136,7 @@ class Cred3:
 
     def is_ready(self):
         ready = True # Default
-        ready = ready and self.connected # Is it connected
+        ready = ready and self._connected # Is it connected
         ready = ready and self.configured # Is it configured
         if self.config["bias_type"] == "Manual":
             ready = ready and self.calibrated # If needed, has a dark frame been made
@@ -151,7 +151,7 @@ class Cred3:
         Returns:
 
         """
-        if not self.connected:
+        if not self._connected:
             raise ValueError("Class instance not connected to a camera. Run connect function first.")
 
         if config_dict is None:
