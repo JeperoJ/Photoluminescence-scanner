@@ -7,35 +7,52 @@ if fli_path not in sys.path:
 from src.camera_utils import cred3
 import matplotlib.pyplot as plt
 import numpy as np
+import FliSdk_V2
 
-camera = cred3.Cred3()
-camera.connect()
-camera.configure(bias_type = "Adaptive", conversion_gain="High", fps=50, exposure=0.01)
-camera.start()
 
-print(camera.config["exposure"])
-image_1 = camera.frame()[1:,:]
-print(image_1.shape)
-print(image_1.max())
-print(image_1.min())
-print(image_1.dtype)
-print(np.where(image_1==image_1.max()))
-bins = np.array(range(image_1.min(), image_1.max()+1))
-plt.hist(image_1.flatten(), bins, alpha=0.5, label="Before")
-camera.auto_expose()
-image_2 = camera.frame()[1:,:]
-print(image_2.shape)
-print(image_2.max())
-print(image_2.min())
-print(image_2.dtype)
-print(np.where(image_2==image_2.max()))
-bins = np.array(range(image_2.min(), image_2.max()+1))
-plt.hist(image_2.flatten(), bins, alpha=0.5, label="After")
-plt.legend(loc="upper right")
-plt.show()
-plt.imshow(image_1)
-plt.title("Before")
-plt.show()
-plt.imshow(image_2)
-plt.title("After")
-plt.show()
+
+
+def auto_expose(camera: cred3.Cred3, max_exposure, iterations, percentile):
+    exposure = np.zeros(iterations)
+    exposure[0] = max_exposure/2
+
+    # Camera Settings
+    camera.configure(exposure=exposure, bias_type="Off")
+
+
+
+
+
+# camera = cred3.Cred3()
+# camera.connect()
+# camera.configure(bias_type = "Adaptive", conversion_gain="High", fps=50, exposure=0.01)
+# camera.start()
+#
+#
+#
+# print(camera.config["exposure"])
+# image_1 = camera.frame()[1:,:]
+# print(image_1.shape)
+# print(image_1.max())
+# print(image_1.min())
+# print(image_1.dtype)
+# print(np.where(image_1==image_1.max()))
+# bins = np.array(range(image_1.min(), image_1.max()+1))
+# plt.hist(image_1.flatten(), bins, alpha=0.5, label="Before")
+# camera.auto_expose()
+# image_2 = camera.frame()[1:,:]
+# print(image_2.shape)
+# print(image_2.max())
+# print(image_2.min())
+# print(image_2.dtype)
+# print(np.where(image_2==image_2.max()))
+# bins = np.array(range(image_2.min(), image_2.max()+1))
+# plt.hist(image_2.flatten(), bins, alpha=0.5, label="After")
+# plt.legend(loc="upper right")
+# plt.show()
+# plt.imshow(image_1)
+# plt.title("Before")
+# plt.show()
+# plt.imshow(image_2)
+# plt.title("After")
+# plt.show()

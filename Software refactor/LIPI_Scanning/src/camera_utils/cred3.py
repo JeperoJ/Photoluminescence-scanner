@@ -9,6 +9,8 @@ if fli_path not in sys.path:
 
 import FliSdk_V2
 #import typing
+import threading
+import time
 
 class Cred3:
     """
@@ -38,6 +40,10 @@ class Cred3:
         - is_ready(): Checks if current class state implies camera ready for operation. Does not check if class state reflects reality.
 
     """
+
+    #TODO: Improve the recording function in general. Maybe somehow move the callback stuff into there as well. Though might be overloading it.
+    #Todo: General clean up is probably in order
+
     def __init__(self):
         self.context = FliSdk_V2.Init()
         self.width = 640
@@ -65,6 +71,9 @@ class Cred3:
             "conversion_gain": self._set_conversion_gain,
             "anti_blooming": self._toggle_anti_blooming
         }
+
+        self._cb_idx: int = 0
+        self._callback_wrappers = []
 
         self._start_frame = None
         self._end_frame = None
@@ -192,6 +201,25 @@ class Cred3:
             self.start()
         return FliSdk_V2.GetRawImageAsNumpyArray(self.context, index=-1)
 
+    def get_images(self, N=1):
+        """
+        !!!EXPERIMENTAL!!!
+        Uses FliSdk GrabN function to get N frames
+
+        Returns:
+
+        """
+        FliSdk_V2.EnableGrabN(self.context, N)
+        buffer = np.zeros((N, self.height, self.width), np.int16)
+        self.start()
+        while not FliSdk_V2.IsGrabNFinished(self.context):
+            time.sleep(0.01)
+        for i in range(N):
+            buffer[i] = FliSdk_V2.GetRawImageAsNumpyArray(self.context, index=-N+i)
+        FliSdk_V2.DisableGrabN(self.context)
+        return buffer
+
+
     def start_recording(self):
         if not self.is_ready():
             raise ValueError("Camera is not ready. Please do setup before recording.")
@@ -300,6 +328,12 @@ class Cred3:
         print(f"\nOptimal exposure selected: {optimal_exposure:.4f}")
         self._set_exposure(optimal_exposure)
 
+    def add_callback(self, cb_func, fps, beforeCopy):
+        wrapper = FliSdk_V2.CWRAPPER(cb_func)
+        self._callback_wrappers.append(wrapper)
+        FliSdk_V2.AddCallBackNewImage(context=self.context, func=wrapper, fps=fps, beforeCopy=beforeCopy, ctx=self._cb_idx)
+        self._cb_idx += 1
+
     # def _BuildNUCBias_legacy(self, frames=256):
     #     """
     #     Build NUC Bias for FLI C-RED 3.
@@ -351,7 +385,7 @@ class Cred3:
         if bias_type == "Adaptive":
             state_adaptive = True
         self._toggle_bias(state_bias)
-        self._toggle_bias(state_adaptive)
+        self._toggle_adaptive_bias(state_adaptive)
         self.config["bias_type"] = bias_type
 
     def _set_conversion_gain(self, conversion_gain: Literal["low", "medium", "high"]):
