@@ -4,20 +4,62 @@ import os
 fli_path = os.path.abspath(os.path.join(os.getenv('FLISDK_DIR'), "Python/lib"))
 if fli_path not in sys.path:
     sys.path.append(fli_path)
-from src.camera_utils import cred3
+import FliSdk_V2
+#from src.camera_utils import cred3
 import matplotlib.pyplot as plt
 import numpy as np
-import FliSdk_V2
+import tifffile
+import time
 
+context = FliSdk_V2.Init()
+FliSdk_V2.DetectGrabbers(context)
+cams = FliSdk_V2.DetectCameras(context)
+FliSdk_V2.SetCamera(context, cams[0])
+FliSdk_V2.SetMode(context, "Full")
+FliSdk_V2.Update(context)
+FliSdk_V2.SetBufferSizeInImages(context, 4000)
+print(FliSdk_V2.GetBufferSize(context))
+print(FliSdk_V2.GetImagesCapacity(context))
+FliSdk_V2.Start(context)
+plt.imshow(FliSdk_V2.GetRawImageAsNumpyArray(context, -1), cmap="gray")
+plt.show()
+print(FliSdk_V2.FliCred.GetBiasState(context))
+FliSdk_V2.FliSerialCamera.EnableBias(context, False)
+print(FliSdk_V2.FliCred.GetBiasState(context))
+FliSdk_V2.FliCred.BuildBias(context)
 
+    # camera.connect()
+    # camera.configure(fps=300)
+    # fs.FliCredThree.EnableAdaptbias(camera.context, False)
+    # print(fs.FliCred.GetBiasState(camera.context))
+    # print(fs.FliSerialCamera.EnableBias(camera.context, False))
+    # print(fs.FliCred.GetBiasState(camera.context))
+    # fs.Start(camera.context)
+    # fs.EnableRingBuffer(camera.context, True)
+    # fs.FliCred.BuildBias(camera.context)
+    # fs.Exit(camera.context)
+    #camera.build_bias()
 
-
-def auto_expose(camera: cred3.Cred3, max_exposure, iterations, percentile):
-    exposure = np.zeros(iterations)
-    exposure[0] = max_exposure/2
-
-    # Camera Settings
-    camera.configure(exposure=exposure, bias_type="Off")
+    # exposures_N = 100
+    # exposure_min = 1/1000
+    # exposure_max = fs.FliCredThree.GetTintMax(camera.context)[1]
+    # print(exposure_max)
+    # exposures = np.linspace(exposure_min, exposure_max, exposures_N)
+    # print("Exposures range: ", exposures)
+    #
+    # images_N = 10
+    # for bias in ["Manual", "Off", "Adaptive"]:
+    #     for conv_gain in ["Low", "Medium", "High"]:
+    #         camera.configure(bias_type=bias, conversion_gain=conv_gain)
+    #         if bias == "Manual":
+    #             input("Enter to build bias")
+    #             camera.build_bias()
+    #             input("Enter to continue")
+    #         for exposure in exposures:
+    #             camera.configure(exposure=exposure)
+    #             images = camera.get_images(images_N)
+    #             _expo_act = camera.config["exposure"]
+    #             tifffile.imwrite(f"Auto_expo_testing//{bias}_{conv_gain}_{_expo_act}.tiff", images, photometric="minisblack", imagej=True)
 
 
 

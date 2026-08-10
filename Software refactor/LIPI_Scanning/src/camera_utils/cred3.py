@@ -12,7 +12,10 @@ import FliSdk_V2
 import threading
 import time
 
+
 class Cred3:
+
+
     """
     Wrapper for the CRED3 camera. Moves the required FliSdk context into an internally handled variable,
     and tries to make usage easier by putting all the handled special commands into easy functions.
@@ -43,7 +46,6 @@ class Cred3:
 
     #TODO: Improve the recording function in general. Maybe somehow move the callback stuff into there as well. Though might be overloading it.
     #Todo: General clean up is probably in order
-
     def __init__(self):
         self.context = FliSdk_V2.Init()
         self.width = 640
@@ -75,6 +77,7 @@ class Cred3:
         self._cb_idx: int = 0
         self._callback_wrappers = []
 
+        # Recording setup
         self._start_frame = None
         self._end_frame = None
 
@@ -218,7 +221,6 @@ class Cred3:
             buffer[i] = FliSdk_V2.GetRawImageAsNumpyArray(self.context, index=-N+i)
         FliSdk_V2.DisableGrabN(self.context)
         return buffer
-
 
     def start_recording(self):
         if not self.is_ready():
@@ -376,6 +378,7 @@ class Cred3:
     #     print(state)
     #     self.calibrated = True
 
+
     def _set_bias_type(self, bias_type: Literal["Off", "Manual", "Adaptive"]):
         print("Setting bias for FLI C-RED 3.")
         state_bias = False
@@ -515,8 +518,6 @@ class Cred3:
                             setter=lambda: FliSdk_V2.FliCredThree.EnableBadPixel(self.context, state),
                             getter=lambda: FliSdk_V2.FliCredThree.GetBadPixelState(self.context)
                             )
-
-
 
 
 #Cut outs
