@@ -265,3 +265,4 @@ pyrightconfig.json
 *.tif
 *.tiff
 Software refactor/LIPI_Scanning/auto_exp_testing.ipynb
+Software refactor/LIPI_Scanning/basic_bias.zip
