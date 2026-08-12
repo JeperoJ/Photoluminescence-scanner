@@ -16,7 +16,7 @@ import time
 import scipy.optimize as opt
 
 
-def get_brightness(images, x1, y1, x2, y2):
+def get_brightness(images, x1=2, y1=2, x2=-2, y2=-2):
     """
     Calculates the brightness of an image or series of images.
 
@@ -65,26 +65,19 @@ def auto_expose(self: cred3.Cred3, target_distance, N=10, x1=2, y1=2, x2=-2, y2=
 
 
 if __name__ == "__main__":
-    # camera = cred3.Cred3()
-    # camera.connect()
-    # camera.configure(bias_type="Off", conversion_gain = "Medium", fps=300, exposure=1/(300*100))
-    #
-    # plt.imshow(camera.get_images(1)[0][2:-2,2:-2], cmap="gray")
-    # plt.show()
+    camera = cred3.Cred3()
+    camera.connect()
+    camera.configure(bias_type="Off", conversion_gain = "Medium", fps=300, exposure=1/(300*100))
+
+    plt.imshow(camera.get_images(1)[0][2:-2,2:-2], cmap="gray")
+    plt.show()
 
     target_distance = 1000
-    Y_t = 2**14-1-target_distance
-    max_exposure = 1/300
-    min_exposure = max_exposure / 10
+    images_N = 10
+    auto_expose(camera, target_distance, images_N)
 
-    res = opt.toms748(lambda x: f(x)-Y_t, min_exposure, max_exposure)
-    print(res)
-    print(f(res))
-
-    #auto_expose(camera, 1000, 1, 10)
-
-    # plt.imshow(camera.get_images(1)[0][2:-2, 2:-2], cmap="gray")
-    # plt.show()
+    plt.imshow(camera.get_images(1)[0][2:-2, 2:-2], cmap="gray")
+    plt.show()
 
 
 
