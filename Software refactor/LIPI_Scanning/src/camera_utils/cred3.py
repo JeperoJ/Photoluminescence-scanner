@@ -11,6 +11,7 @@ import FliSdk_V2
 #import typing
 import threading
 import time
+import scipy.optimize as opt
 
 
 class Cred3:
@@ -259,66 +260,64 @@ class Cred3:
             raise ValueError("Error while building flat.")
         print("Flat built successfully")
 
-    def auto_expose(self, iterations=10, init_exposure=None, h1=2, w1=2, h2=-2, w2=-2):
+    def get_brightness(self, images, x1=2, y1=2, x2=-2, y2=-2):
         """
-        Automatically set an appropriate exposure level for the camera.
-        
-        Adjusts exposure to get the maximum pixel value as close as possible to the 14-bit max (16383).
-        Handles bias correction artifacts by clipping pixel values to the valid 14-bit range [0, 16383].
-        
+        Calculates the brightness of an image or series of images.
+
         Args:
-            iterations: Maximum number of exposure adjustment iterations
-            init_exposure: Initial exposure value to start with (optional)
-            h1, w1, h2, w2: ROI slice indices (default: exclude outer 2 pixels per suggestion)
-        
+            images: Captured images
+            x1, y1, x2, y2: Area to calculate brightness in
+
         Returns:
-            None (sets optimal exposure level in self.config)
+            brightness: float
         """
-        BIT_DEPTH_14 = 2 ** 14 - 1  # 16383: maximum 14-bit value
-        
-        if not self.is_ready():
-            raise ValueError("Camera is not ready. Please do full setup before auto exposure.")
 
-        self.start()
+        return np.max(images[:,y1:y2, x1:x2])
 
-        exposure_prev = 0
-        exposures = np.zeros(iterations)
-        dists = np.zeros(iterations)
+    def auto_expose(self, target_distance, N=10, x1=2, y1=2, x2=-2, y2=-2):
+        """
+        Auto exposes camera using methods from numerical analysis implemented in SciPy
 
-        if init_exposure is not None:
-            self._set_exposure(init_exposure)
+        Args:
+            target_distance: Target distance from max pixel value (14 bit)
+            N: Images to capture for each iteration
+            x1, y1, x2, y2: Bounds area that is exposed for
+        """
+        bias_before = self.config["bias_type"]
+        self.configure(bias_type="Off")
 
-        i = 0
-        while True:
-            exposure = self.config["exposure"]
-            exposures[i] = exposure
-            image = self.frame()[h1:h2, w1:w2]
-            
-            # Clip pixel values to valid 14-bit range [0, 16383]
-            # This handles bias correction artifacts that may produce out-of-range values
-            image_clipped = np.clip(image, 0, BIT_DEPTH_14)
-            max_pixel = image_clipped.max()
+        brightness_max = 2 ** 14 - 1
+        res, exposure_min, exposure_max = FliSdk_V2.FliCredThree.GetTintRange(self.context)
+        if not res:
+            print("Failed to get Tint range")
+            return None
+        print("Exposure range: ", exposure_min, exposure_max)
+        brightness_target = brightness_max - target_distance  # Target Y value
 
-            # Calculate distance from max pixel to 14-bit maximum
-            dist = BIT_DEPTH_14 - max_pixel
-            
-            print(f"Iteration {i}: Exposure={exposure:.4f}, Max pixel={max_pixel}, Distance to max={dist}")
-            dists[i] = dist
-            
-            change = abs(exposure - exposure_prev) / 2
-            
-            # If too far from max (underexposed), increase exposure
-            if dist > 100:
-                print("  -> Underexposed, increasing exposure")
-                self._set_exposure(exposure + change)
-            else:
-                print("  -> Close to target, decreasing exposure")
-                self._set_exposure(exposure - change)
-            
-            exposure_prev = exposure
-            i += 1
-            if i >= iterations:
-                break
+        def f(x):
+            self.configure(exposure=x)
+            images = self.get_images(N)
+            brightness = self.get_brightness(images, x1, y1, x2, y2)
+            return float(brightness - brightness_target)
+
+        f_min = f(exposure_min)
+        f_max = f(exposure_max)
+
+        if f_min > 0 and f_max > 0:
+            print("Gain too high")
+            return None
+        if f_min < 0 and f_max < 0:
+            print("Gain too low")
+            return None
+
+        if f(exposure_max) < 0:
+            print("Max exposure under target. Setting to max.")
+            optimized_exposure = exposure_max
+        else:
+            optimized_exposure = opt.brentq(f, exposure_min, exposure_max)
+
+        self.configure(bias_type=bias_before, exposure=optimized_exposure)
+        return optimized_exposure
 
         # Find the exposure that gave the best result (smallest distance to max)
         # Filter out any zero entries from incomplete iterations

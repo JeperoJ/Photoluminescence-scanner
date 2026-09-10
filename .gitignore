@@ -264,3 +264,5 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm+all
 *.tif
 *.tiff
+Software refactor/LIPI_Scanning/auto_exp_testing.ipynb
+Software refactor/LIPI_Scanning/basic_bias.zip
