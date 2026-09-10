@@ -131,13 +131,18 @@ for scan_dir in scans:
     SNR, profile = scp.SNR50(Sig1, Sig2, Bg, dB=False, profile=True) #LEGACY: Not a good measurement
     print(stitch.shape)
     SNR_test_full = np.mean(stitch[:,100:540])/np.std(stitch[:,0:75], ddof=1)
+    SNR_test_profile = np.mean(stitch[:,100:540], axis=1)/np.std(stitch[:,0:75], axis=1, ddof=1)
     print(f"SNR: {SNR}, SNRNew: {SNR_test_full}")
     np.savetxt(os.path.join(scan_dir, "SNR_profile.csv"), profile, delimiter=",")
+    np.savetxt(os.path.join(scan_dir, "SNR_test_profile.csv"), SNR_test_profile, delimiter=",")
     with open(os.path.join(scan_dir, "SNR.txt"), "w") as f:
         print(f"SNR50: {SNR}", file=f)
         print(f"SNR50_test_full: {SNR_test_full}", file=f)
     plt.plot(profile)
     plt.savefig(os.path.join(scan_dir, "SNR_profile.png"))
+    plt.close()
+    plt.plot(SNR_test_profile)
+    plt.savefig(os.path.join(scan_dir, "SNR_test_profile.png"))
     plt.close()
 
     #Images full
@@ -160,13 +165,18 @@ for scan_dir in scans:
 
     SNR_resize, profile_resize = scp.SNR50(Sig1_resize, Sig2_resize, Bg_resize, dB=False, profile=True)
     SNR_test_resize = np.mean(stitch_resize[:, 100:540]) / np.std(stitch_resize[:, 0:75], ddof=1)
+    SNR_test_resize_profile = np.mean(stitch_resize[:, 100:540], axis=1) / np.std(stitch_resize[:, 0:75], axis=1, ddof=1)
     print(f"SNR50_resize: {SNR_resize}, SNRNew_resize: {SNR_test_resize}")
     np.savetxt(os.path.join(scan_dir, "SNR_resize_profile.csv"), profile_resize, delimiter=",")
+    np.savetxt(os.path.join(scan_dir, "SNR_test_resize_profile.csv"), SNR_test_resize_profile, delimiter=",")
     with open(os.path.join(scan_dir, "SNR_resize.txt"), "w") as f:
         print(f"SNR50: {SNR_resize}", file=f)
         print(f"SNR50_test_resize: {SNR_test_resize}", file=f)
     plt.plot(profile_resize)
     plt.savefig(os.path.join(scan_dir, "SNR_resize_profile.png"))
+    plt.close()
+    plt.plot(SNR_test_resize_profile)
+    plt.savefig(os.path.join(scan_dir, "SNR_test_resize_profile.png"))
     plt.close()
 
     saver(Sig1_resize, "Sig1_resize")

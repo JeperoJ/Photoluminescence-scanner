@@ -77,6 +77,8 @@ class CallbackCollector:
         self.buffer_thread.join()
         for thread in self.threads:
             thread.join()
+
+
         return np.array(self.stitches, dtype=np.int16), np.array(self.frame_tags, dtype=np.int16)
 
     def callback(self, ptr, ctx):
@@ -96,7 +98,7 @@ class CallbackCollector:
 
     def consumer(self, priv_lock):
         """
-        Purpose: Thread function, runs continuously with the program and processed the incoming frames.
+        Purpose: Thread function, runs continuously with the program and process the incoming frames.
 
         Control flow:
         Loads data from queue
@@ -152,8 +154,6 @@ class CallbackCollector:
             peaks, valleys = get_extrema_window(50, phase, self.fps, self.window_size) #Extrema (This and above could be combined to one. Will be replaced though)
             self.stitches.append(self.work_buffer[peaks]-self.work_buffer[valleys])
             self.work_buffer[:self.overlap] = self.work_buffer[-self.overlap:]
-            if self.stopped.is_set():
-                break
 
 def get_phase(x, f, f_s):
     '''

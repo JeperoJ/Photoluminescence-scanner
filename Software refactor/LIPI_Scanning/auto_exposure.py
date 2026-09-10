@@ -16,51 +16,55 @@ import time
 import scipy.optimize as opt
 
 
-def get_brightness(images, x1=2, y1=2, x2=-2, y2=-2):
-    """
-    Calculates the brightness of an image or series of images.
-
-    Args:
-        images: Captured images
-        x1, y1, x2, y2: Area to calculate brightness in
-
-    Returns:
-        brightness: float
-    """
-
-    return np.max(images[y1:y2, x1:x2])
-
-
-def auto_expose(self: cred3.Cred3, target_distance, N=10, x1=2, y1=2, x2=-2, y2=-2):
-    """
-    Auto exposes camera using methods from numerical analysis implemented in SciPy
-
-    Args:
-        target_distance: Target distance from max pixel value (14 bit)
-        N: Images to capture for each iteration
-        x1, y1, x2, y2: Bounds area that is exposed for
-    """
-    bias_before = self.config["bias_type"]
-    self.configure(bias_type="Off")
-
-    brightness_max = 2**14-1
-    res, exposure_min, exposure_max = fs.FliCredThree.GetTintRange(self.context)
-    if not res:
-        print("Failed to get Tint range")
-        return None
-    print("Exposure range: ", exposure_min, exposure_max)
-    brightness_target = brightness_max - target_distance # Target Y value
-
-    def f(x):
-        self.configure(exposure=x)
-        images = self.get_images(N)
-        brightness = get_brightness(images, x1, y1, x2, y2)
-        return brightness - brightness_target
-
-    optimized_exposure = opt.toms748(f, exposure_min, exposure_max)
-
-    self.configure(bias_type = bias_before, exposure = optimized_exposure)
-    return None
+# def get_brightness(images, x1=2, y1=2, x2=-2, y2=-2):
+#     """
+#     Calculates the brightness of an image or series of images.
+#
+#     Args:
+#         images: Captured images
+#         x1, y1, x2, y2: Area to calculate brightness in
+#
+#     Returns:
+#         brightness: float
+#     """
+#
+#     return np.max(images[y1:y2, x1:x2])
+#
+#
+# def auto_expose(self: cred3.Cred3, target_distance, N=10, x1=2, y1=2, x2=-2, y2=-2):
+#     """
+#     Auto exposes camera using methods from numerical analysis implemented in SciPy
+#
+#     Args:
+#         target_distance: Target distance from max pixel value (14 bit)
+#         N: Images to capture for each iteration
+#         x1, y1, x2, y2: Bounds area that is exposed for
+#     """
+#     bias_before = self.config["bias_type"]
+#     self.configure(bias_type="Off")
+#
+#     brightness_max = 2**14-1
+#     res, exposure_min, exposure_max = fs.FliCredThree.GetTintRange(self.context)
+#     if not res:
+#         print("Failed to get Tint range")
+#         return None
+#     print("Exposure range: ", exposure_min, exposure_max)
+#     brightness_target = brightness_max - target_distance # Target Y value
+#
+#     def f(x):
+#         self.configure(exposure=x)
+#         images = self.get_images(N)
+#         brightness = get_brightness(images, x1, y1, x2, y2)
+#         return float(brightness - brightness_target)
+#
+#     if f(exposure_max) < 0:
+#         print("Max exposure under target. Setting to max.")
+#         optimized_exposure = exposure_max
+#     else:
+#         optimized_exposure = opt.toms748(f, exposure_min, exposure_max)
+#
+#     self.configure(bias_type = bias_before, exposure = optimized_exposure)
+#     return optimized_exposure
 
 
 
@@ -69,14 +73,15 @@ if __name__ == "__main__":
     camera.connect()
     camera.configure(bias_type="Off", conversion_gain = "Medium", fps=300, exposure=1/(300*100))
 
-    plt.imshow(camera.get_images(1)[0][2:-2,2:-2], cmap="gray")
+    plt.imshow(camera.get_images(1)[0][2:-2,2:-2], cmap="gray", vmin=0, vmax=2**14-1)
     plt.show()
 
     target_distance = 1000
     images_N = 10
-    auto_expose(camera, target_distance, images_N)
+    res = camera.auto_expose(target_distance, images_N)
+    print(camera.get_brightness(camera.get_images(10)))
 
-    plt.imshow(camera.get_images(1)[0][2:-2, 2:-2], cmap="gray")
+    plt.imshow(camera.get_images(1)[0][2:-2, 2:-2], cmap="gray", vmin=0, vmax=2**14-1)
     plt.show()
 
 
