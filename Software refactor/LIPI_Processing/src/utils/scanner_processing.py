@@ -3,11 +3,11 @@ import scipy
 import tifffile
 from . import ingaas_processing as ip
 
-def load_scan(source, width=640, height=512, crop_rows=None, cal_path=None, debug=False, parallel=True):
+def load_scan(source, width=640, height=512, crop_rows=None, cal_path=None, debug=False, parallel=True, images=None, offset_images=0):
     print("Loading scan")
     if str(source).endswith('.raw'):
         print("Processing a .raw file")
-        images = ip.load_raw_image(source, width, height)
+        images = ip.load_raw_image(source, width, height, images=images, offset_images=offset_images)
     elif str(source).endswith('.tiff'):
         print("Processing a .tiff file")
         images = tifffile.imread(source)
@@ -97,37 +97,55 @@ def get_extrema_window(f,phase,f_s,N):
     valleys = np.round(f_s*(base+valley_arg)/(2*np.pi*f)).astype(np.int32)
 
     #mask = np.all([peaks > start, peaks < end, valleys > start, valleys < end], axis=0)
-    mask = np.all([peaks < N, valleys < N], axis=0)
-    return peaks[mask], valleys[mask]
+    #mask = np.all([peaks < N, valleys < N], axis=0)
+    return peaks, valleys
 
-def get_extrema_scan(scan, window_length, skip, f_m, fps):
+def get_extrema_scan(scan, window_length, overlap, skip, f_m, fps):
     # Choice to use either steps or window length as hyperparameter. Think window length makes the most sense, due to consistency
     #  between scans. Unsure though.
     # Probably need skip for certain scans.
     signal = np.sum(scan, axis=(1, 2))
     N = len(signal)
 
-    min_steps = np.ceil(N / window_length).astype(np.int32)
-    steps = 10 + min_steps
-    step_size = (N - skip - window_length) / (steps - 1)
+    #min_steps = np.ceil(N / window_length).astype(np.int32)
+    #steps = 10 + min_steps
+    #step_size = (N - skip - window_length) / (steps - 1)
+    step_size = window_length - overlap
 
     peaks = np.empty(0, dtype=np.int32)
     valleys = np.empty(0, dtype=np.int32)
 
-    for i in range(steps):
-        w_start = round(i * step_size) + skip
+    w_start = skip
+    while True:
+        # Window: Start:End
+        # Peaks and valleys: Start:Start_next
+        # If N-start_next < step_size:
+        #   End=Start_next=N
         w_end = w_start + window_length
-        w_start_next = round((i + 1) * step_size) + skip
-        if w_end + 10 > N:
-            w_start_next = w_end
+        if w_start >= N:
+            break
+        w_start_next = w_start + step_size
+        #print(w_start,w_end,w_start_next)
+        if w_start_next + step_size > N:
+            w_start_next = N
+            w_end = N
+
+        #print(w_start, w_end, w_start_next)
 
         window = signal[w_start:w_end]
         phase = get_phase(window, f_m, fps)
-        peaks_i, valleys_i = get_extrema_window(f_m, phase, fps, w_start_next - w_start)
-        peaks = np.append(peaks, peaks_i + w_start)
-        valleys = np.append(valleys, valleys_i + w_start)
+        peaks_full_0, valleys_full_0 = get_extrema_window(f_m, phase, fps, step_size)
+        peaks_full = peaks_full_0 + w_start
+        valleys_full = valleys_full_0 + w_start
+        mask = np.all([peaks_full < w_start_next, valleys_full < w_start_next], axis=0)
 
-    return peaks, valleys
+        peaks = np.append(peaks, peaks_full[mask])
+        valleys = np.append(valleys, valleys_full[mask])
+        w_start = w_start_next
+
+    mask = np.all([peaks < N, valleys < N], axis=0)
+
+    return peaks[mask], valleys[mask]
 
 def SNR50(Img1, Img2, ImgBG, dB=False, profile=True):
     K=np.sqrt(0.5)*((2/np.pi)**(-0.5))

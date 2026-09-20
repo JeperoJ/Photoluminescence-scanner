@@ -77,8 +77,8 @@ if __name__ == '__main__':
     cb_handler = CallbackHandler(out_q)
     cb_producer = mp.Process(target=callback_loop, args=(cb_handler.callback,rng,))
     cb_producer.start()
-    printer(out_q)
-    #displayer(out_q)
+    #printer(out_q)
+    displayer(out_q)
     #saver(out_q)
 
     #cb_handler.processer.close()
