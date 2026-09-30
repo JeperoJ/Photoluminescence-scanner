@@ -101,15 +101,12 @@ def get_extrema_window(f,phase,f_s,N):
     return peaks, valleys
 
 def get_extrema_scan(scan, window_length, overlap, skip, f_m, fps):
-    # Choice to use either steps or window length as hyperparameter. Think window length makes the most sense, due to consistency
-    #  between scans. Unsure though.
-    # Probably need skip for certain scans.
+    # First window, all peaks and valleys
+
+
+
     signal = np.sum(scan, axis=(1, 2))
     N = len(signal)
-
-    #min_steps = np.ceil(N / window_length).astype(np.int32)
-    #steps = 10 + min_steps
-    #step_size = (N - skip - window_length) / (steps - 1)
     step_size = window_length - overlap
 
     peaks = np.empty(0, dtype=np.int32)
@@ -117,31 +114,30 @@ def get_extrema_scan(scan, window_length, overlap, skip, f_m, fps):
 
     w_start = skip
     while True:
-        # Window: Start:End
-        # Peaks and valleys: Start:Start_next
-        # If N-start_next < step_size:
-        #   End=Start_next=N
         w_end = w_start + window_length
         if w_start >= N:
             break
-        w_start_next = w_start + step_size
-        #print(w_start,w_end,w_start_next)
-        if w_start_next + step_size > N:
-            w_start_next = N
+        # w_start_next = w_start + step_size
+        # if w_start_next + step_size > N:
+        #     w_start_next = N
+        #     w_end = N
+        if w_start + step_size > N:
             w_end = N
-
-        #print(w_start, w_end, w_start_next)
 
         window = signal[w_start:w_end]
         phase = get_phase(window, f_m, fps)
-        peaks_full_0, valleys_full_0 = get_extrema_window(f_m, phase, fps, step_size)
-        peaks_full = peaks_full_0 + w_start
-        valleys_full = valleys_full_0 + w_start
-        mask = np.all([peaks_full < w_start_next, valleys_full < w_start_next], axis=0)
+        peaks_full_0, valleys_full_0 = get_extrema_window(f_m, phase, fps, window_length)
+        #peaks_full = peaks_full_0 + w_start
+        #valleys_full = valleys_full_0 + w_start
+        # mask = np.all([peaks_full < w_start_next, valleys_full < w_start_next], axis=0)
 
-        peaks = np.append(peaks, peaks_full[mask])
-        valleys = np.append(valleys, valleys_full[mask])
-        w_start = w_start_next
+        peaks = np.append(peaks, peaks_full_0[peaks_full_0 > overlap] + w_start)
+        valleys = np.append(valleys, valleys_full_0[valleys_full_0 > overlap] + w_start)
+
+        #peaks = np.append(peaks, peaks_full[mask])
+        #valleys = np.append(valleys, valleys_full[mask])
+        # w_start = w_start_next
+        w_start += step_size
 
     mask = np.all([peaks < N, valleys < N], axis=0)
 
